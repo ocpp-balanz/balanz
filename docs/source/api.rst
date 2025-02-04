@@ -14,7 +14,7 @@ they will be rejected. The sha256 value of token specified in a list in the bala
 An online tool may be used, e.g. `Coding Tools <https://coding.tools/sha256>`_. Set the tool to generate
 lower case sha256 values as in the example below (first sha matches the token set in the example UIs).
 
-.. code-block:: 
+.. code-block:: text
     :caption: Example of API token sha setting
 
     [api]

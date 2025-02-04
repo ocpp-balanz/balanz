@@ -29,7 +29,7 @@ There should not be several allocation groups along a path in the group tree.
 
 Groups are defined in a CSV file named ``groups.csv``; file name is configurable.
 
-.. code-block::
+.. code-block:: text
     :caption: Example `groups.csv` file
 
     group_id,parent_id,description,priority,max_allocation
@@ -69,7 +69,7 @@ A Charger is naturally the most interesting point of control for :term:`balanz`.
 - ``conn_max``: The maximum current that can be drawn from this charger in Amps.
 - ``auth_sha``: An authentication SHA-256 hash to verify the charger's identity. This is set by :term:`balanz`.
 
-.. code-block::
+.. code-block:: text
     :caption: Example part of a `chargers.csv` file
 
     charger_id,alias,group_id,no_connectors,description,conn_max,auth_sha
@@ -91,7 +91,7 @@ off-line analysis or processing. Note, that the ``energy`` values is given in kW
 The ``history`` field is a ``;``-separated list of timestamps and their associated offer values in Amps (A).
 
 
-.. code-block:: 
+.. code-block:: text
     :caption: Example part of a `sessions.csv` file
 
     session_id,charger_id,id_tag,stop_id_tag,start_time,end_time,duration,energy,stop_reason,history
@@ -123,7 +123,7 @@ Tags
 charging will either be allowed to start, or rejected. :term:`balanz` may be configured to perform such authorization in which case the tags must
 be present in a CSV file.
 
-.. code-block:: 
+.. code-block:: text
     :caption: Example part of a `tags.csv` file
 
     id_tag,user_name,parent_id_tag,description,status,priority
