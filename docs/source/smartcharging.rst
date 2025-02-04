@@ -44,7 +44,7 @@ specific profile type ``TxProfile``. Each profile has a priority defined by a so
 The ``SetChargingProfile`` call allows for specifying advanced schedules. balanz uses no schedules, but always asks that changes be immediate - 
 and valid forever/until changed again.
 
-When a charger connects to balanz, it will ensure the creation of  two ``TxDefaultProfile``s. The first *minimum profile* (with ``StackLevel`` 0) 
+When a charger connects to balanz, it will ensure the creation of  two ``TxDefaultProfile``. The first *minimum profile* (with ``StackLevel`` 0) 
 will be set to the miniumum charging offer (default 6A) while the second *blocking profile* (with ``StackLevel`` 1) will be configured with 
 no (i.e. zero) allocation. This profile ensures that a charger cannot start using until and unless balanz has specifically made a charging offer.
 

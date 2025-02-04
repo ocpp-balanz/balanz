@@ -25,7 +25,7 @@ from ocpp.v16.enums import (
     GenericStatus,
     RegistrationStatus,
 )
-from util import parse_time
+from util import parse_time, gen_sha_256
 
 logger = logging.getLogger("cp_v16")
 
@@ -209,7 +209,7 @@ class ChargePoint_CSMS_v16(ChargePoint_v16):
         else:
             auth_string = self.charger.charger_id + ":" + authorizationKey
             auth_string_b64 = base64.b64encode(auth_string.encode()).decode()
-            self.charger.auth_sha = Charger.gen_auth_sha("Basic " + auth_string_b64)
+            self.charger.auth_sha = gen_sha_256("Basic " + auth_string_b64)
             logger.info(
                 f"Succesfully set AuthorizationKey for {self.charger.charger_id}. Sha is {self.charger.auth_sha}"
             )
