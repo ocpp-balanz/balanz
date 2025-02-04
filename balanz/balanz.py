@@ -21,7 +21,8 @@ from ocpp.v16.enums import ChargePointStatus, ChargingProfileStatus, ClearChargi
 from util import time_str, gen_sha_256
 from websockets.frames import CloseCode
 
-balanz_version = importlib.metadata.version('balanz')
+# balanz_version = importlib.metadata.version('balanz')
+balanz_version = "0.9.0"  # TODO: Fix above also in docker build
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
