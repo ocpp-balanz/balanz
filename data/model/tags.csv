@@ -1,0 +1,20 @@
+id_tag,user_name,parent_id_tag,description,status,priority
+8A03EE96,Corp EV 1,ACME,Corporate tag for EV 1,Activated,1
+E08CEE18,Corp EV 2,ACME,Corporate tag for EV 2,Activated,1
+614C2776,Corp EV 3,ACME,Corporate tag for EV 3,Activated,1
+87DBF822,Corp EV 4,ACME,Corporate tag for EV 4,Activated,1
+DB08E534,Corp EV 5,ACME,Corporate tag for EV 5,Blocked,
+FC095BA8,Corp EV 6,ACME,Corporate tag for EV 6,Activated,1
+37D36BA1,Corp EV 7,ACME,Corporate tag for EV 7,Activated,1
+B931CAE1,Corp EV 8,ACME,Corporate tag for EV 8,Activated,1
+705964B8,Corp EV 9,ACME,Corporate tag for EV 9,Activated,1
+56EB8FBF,Christopher Moore,,Christopher Moore personal tag,Activated,
+3210FF90,Christoper Smith,,Christopher Smith personal tag,Activated,
+894813FC,Christopher Williams,,Christopher Williams personal tag,Activated,
+3B86D60D,Jane Smith,,Jane Smith personal tag,Activated,
+FE7FF01E,Michael Miller,,Michael Miller (CEO) personal tag,Activated,10
+176A6AFA,David Davis,,David Davis (CFO) personal tag,Activated,10
+6EBEFC7F,John Johnson,,John Johnson personal tag,Blocked,
+D40C346D,John Jones,,John Jones personal tag,Activated,
+2C26B920,Sarah Miller,,Sarah Miller personal tag,Blocked,
+29837FD6,Jane Johnson,,Jane Johnson personal tag,Activated,
