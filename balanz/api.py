@@ -374,22 +374,16 @@ async def api_handler(websocket):
                             ]
                 elif not result and command == "GetConfiguration":
                     key_list = payload.get("key", None)
+                    logger.debug(f'key_list is {key_list}')
                     c_result: call_result.GetConfiguration = await charger.ocpp_ref.get_configuration_req(key=key_list)
-                    if c_result.status != ConfigurationStatus.accepted:
-                        result = [
-                            MessageType.CallError,
-                            message_id,
-                            {"status": c_result.status},
-                        ]
-                    else:
-                        result = [
-                            MessageType.CallResult,
-                            message_id,
-                            {
-                                "configuration_key": c_result.configuration_key,
-                                "unknown_key": c_result.unknown_key,
-                            },
-                        ]
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        {
+                            "configuration_key": c_result.configuration_key,
+                            "unknown_key": c_result.unknown_key,
+                        },
+                    ]
                 elif not result and command == "ChangeConfiguration":
                     key_list = payload.get("key", None)
                     c_result: call_result.ChangeConfiguration = await charger.ocpp_ref.change_configuration_req(

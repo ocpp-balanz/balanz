@@ -54,6 +54,8 @@
       <option value="RemoteStartTransaction">RemoteStartTransaction</option>
       <option value="RemoteStopTransaction">RemoteStopTransaction</option>
       <option value="TriggerMessage">TriggerMessage</option>
+      <option value="GetConfiguration">GetConfiguration</option>
+      <option value="ChangeConfiguration">ChangeConfiguration</option>
       <option value="Reset">Reset</option>
     </select>
     <input id="args" size="120"/>
@@ -127,9 +129,12 @@
         args = '{"charger_id": "charger_id", "type": "Soft"}';
       } else if (command == "TriggerMessage") {
         args = '{"charger_id": "charger_id", "requested_message": "MeterValues", "connector_id": 1}';
+      } else if (command == "GetConfiguration") {
+        args = '{"charger_id": "charger_id", "key": []}';
+      } else if (command == "ChangeConfiguration") {
+        args = '{"charger_id": "charger_id", "key": "", "value": ""}';
       } else if (command == "Reset") {
         args = '{"charger_id": "charger_id", "type": "Soft"}';
-
       } 
       document.getElementById("args").value = args;
     }
