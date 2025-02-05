@@ -25,7 +25,7 @@ from ocpp.v16.enums import (
     GenericStatus,
     RegistrationStatus,
 )
-from util import parse_time, gen_sha_256
+from util import gen_sha_256, parse_time
 
 logger = logging.getLogger("cp_v16")
 
@@ -204,15 +204,12 @@ class ChargePoint_CSMS_v16(ChargePoint_v16):
         authorizationKey = Charger.gen_auth()
 
         result = await self.change_configuration_req(key="AuthorizationKey", value=authorizationKey)
-        if result.status != ConfigurationStatus.accepted:
-            logger.error(f"Failed to set AuthorizationKey for {self.charger.charger_id}")
-        else:
-            auth_string = self.charger.charger_id + ":" + authorizationKey
-            auth_string_b64 = base64.b64encode(auth_string.encode()).decode()
-            self.charger.auth_sha = gen_sha_256("Basic " + auth_string_b64)
-            logger.info(
-                f"Succesfully set AuthorizationKey for {self.charger.charger_id}. Sha is {self.charger.auth_sha}"
-            )
+        auth_string = self.charger.charger_id + ":" + authorizationKey
+        auth_string_b64 = base64.b64encode(auth_string.encode()).decode()
+        self.charger.auth_sha = gen_sha_256("Basic " + auth_string_b64)
+        logger.info(
+            f"Succesfully set AuthorizationKey for {self.charger.charger_id}. Sha is {self.charger.auth_sha}"
+        )
 
-            # Rewriting CSV file. Maybe not super-pretty. Must review if better place to do this.
-            Charger.write_csv(config["model"]["chargers_csv"])
+        # Rewriting CSV file. Maybe not super-pretty. Must review if better place to do this.
+        Charger.write_csv(config["model"]["chargers_csv"])

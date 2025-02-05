@@ -22,7 +22,7 @@ as a separate Local Controller (:term:`LC`) component. :term:`balanz` supports b
 If deployed as a :term:`LC`, :term:`balanz` will rely on a :term:`CSMS`/:term:`CS` for all charger operations not related to Smart Charging, including things like session authorization, reporting, firmware upgrades, etc. 
 The :term:`CSMS`/:term:`CS` in this case will likely be supplied by the manufacturer of the chargers, but could even be a third-party provider.
 
-While not the primary focus, it is possible to deploy :term:`balanz` without the enabling Smart Charging. In this case, :term:`balanz` would either work as an OCPP-proxy (:term:`LC` mode), or
+While not the primary focus, it is possible to deploy :term:`balanz` without enabling Smart Charging. In this case, :term:`balanz` would either work as an OCPP-proxy (:term:`LC` mode), or
 as a full (simple) - :term:`CSMS`/:term:`CS`.
 
 Below diagram shows different :term:`balanz` deployment options.
@@ -35,7 +35,7 @@ Below diagram shows different :term:`balanz` deployment options.
  EV <--> Charger <-- OCPP --> balanz CSMS/CS (wo/Smart Charging)
 
 
-:term:`balanz` supports the :term:`OCPP-J` v1.6.
+:term:`balanz` supports :term:`OCPP-J` v1.6.
 
 :term:`balanz` is a python application based on the brilliant `occp library <https://github.com/mobilityhouse/ocpp>`_ kindly provided using an MIT license by 
 `MobilityHouse <https://www.mobilityhouse.com/>`_.

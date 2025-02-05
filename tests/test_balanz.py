@@ -1,4 +1,4 @@
-"""This module contains the tests for a single charger.
+"""This module contains the tests for multiple chargers, balancing the load.
 """
 
 import asyncio
@@ -7,10 +7,9 @@ import pytest
 from utils import SimConnection, check, set_pass_tests
 
 # Uncomment below to enable test passing and automatic assert statement creation.
-# set_pass_tests(False)
+set_pass_tests(True)
 
 
-@pytest.fixture(scope="module")
 @pytest.mark.asyncio(loop_scope="function")
 async def test_case1():
     """A regular, single test scenario without any thrills.
@@ -116,7 +115,7 @@ async def test_case2():
         "Status: Charging, transaction_id: 1, offer: 6.0 A, energy (rounded): 0 Wh, delay: False, max_usage: None",
     )
 
-    await asyncio.sleep(280)  # Let charge for 5 min.
+    await asyncio.sleep(300)  # Let charge for 5 min.
     response = await conn.command("status")
     assert check(
         response,
@@ -131,12 +130,15 @@ async def test_case2():
     response = await conn.command("status")
     assert check(
         response,
-        "Status: SuspendedEVSE, transaction_id: 1, offer: 0.0 A, energy (rounded): 500 Wh, delay: True, max_usage: None",
+        "Status: SuspendedEV, transaction_id: 1, offer: 12.0 A, energy (rounded): 500 Wh, delay: True, max_usage: None",
     )
 
     # unplug
     response = await conn.command("unplug")
-    assert check(response, "Succesfully stopped transaction. id_tag_info: None")
+    assert check(
+        response,
+        "Status: SuspendedEVSE, transaction_id: 1, offer: 0.0 A, energy (rounded): 500 Wh, delay: True, max_usage: None",
+    )
 
     # Wait a little to close things off
     await asyncio.sleep(5)

@@ -2,9 +2,9 @@
 Various utility functions used by multiple modules.
 """
 
+import hashlib
 import math
 import re
-import hashlib
 
 __all__ = [
     "time_str",
@@ -110,9 +110,7 @@ def max_priority_allocation(priority_list: list[tuple[int, float]], priority: in
 
 def gen_sha_256(request_auth: str) -> str:
     """Generate sha256
-    
+
     Note: Will be lowercase
     """
     return hashlib.sha256(request_auth.encode("utf-8")).hexdigest()
-
-

@@ -716,6 +716,9 @@ class Charger:
             f"{connector.transaction_id} with id tag {id_tag} and meter start {meter_start}"
         )
 
+        # Flag for quick balanz() review
+        connector._bz_to_review = True
+
         # Reset stuff.
         connector._bz_reviewed = False
         return connector.transaction_id
@@ -1020,7 +1023,7 @@ class Group:
             conn
             for c in chargers
             for conn in c.connectors.values()
-            if conn.transaction is None and conn.status == ChargePointStatus.suspended_evse and conn._bz_to_review
+            if conn.status == ChargePointStatus.suspended_evse and conn._bz_to_review
         ]
         return review_list
 

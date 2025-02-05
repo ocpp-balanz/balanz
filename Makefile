@@ -1,5 +1,7 @@
 # Makefile for Balanz project
 
+BALANZ_VERSION=$(shell poetry version -s)
+
 # OS specific stuff. Support both Windows and Linux
 ifeq ($(OS), Windows_NT)
 	copy=copy
@@ -46,3 +48,7 @@ docs: .install-poetry
 
 run: 
 	cd data $(cmdsep) python $(call FixPath,../balanz/balanz.py)
+
+test:
+	$(MAKE) tests
+

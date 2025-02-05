@@ -38,8 +38,8 @@ Groups are defined in a CSV file named ``groups.csv``; file name is configurable
     HQ-LOW,HQ,HQ low priority chargers,1,
     HQ-MED,HQ,HQ medium priority chargers,3,
     HQ-HIGH,HQ,HQ high priority chargers,5,
-    RR1,ACME,Road Runner 1 Site chargers,,00:00-23:59>0=10:3=12:5=16
-    RR2,ACME,Road Runner 2 Site,,00:00-05:59>0=48;06:00-16:59>0=16:3=32:5=48;17:00-20:59>0=0:5=48;21:00-23:59>0=32:5=48
+    RR1,ACME,Road Runner 1 Site chargers,,00:00-05:59>0=48;06:00-16:59>0=16:3=32:5=48;17:00-20:59>0=0:5=48;21:00-23:59>0=32:5=48
+    RR2,ACME,Road Runner 2 Site,,00:00-23:59>0=24:3=40:5=48
     RR2-LOW,RR2,Road Runner 2 Site low priority,1,
     RR2-HIGH,RR2,Road Runner 2 Site low priority,3,
     Default,,Default Group for autoregistered chargers,,
@@ -49,7 +49,7 @@ as is the case in the examples above. In this allocation maximum may e.g. be inc
 activities are not as demanding in terms of electricity. A schedule may also specify times in teh day where charging should be
 limited, e.g. due to higher electricity costs.
 
-For example, on the ``RR2`` site above in the time interval between 17:00 and 20:59 (most expensive timeslot in Denmark due to
+For example, on the ``RR1`` site above in the time interval between 17:00 and 20:59 (most expensive timeslot in Denmark due to
 electricity tarrifs), charging with a priority below 5 is completely disabled. If 5 or above, charging can occur with a total
 of the full maximum 48 A available.
 

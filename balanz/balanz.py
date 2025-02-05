@@ -5,20 +5,21 @@ Balanz. Simple CSMS or LC with Load Balancing capabilities.
 import argparse
 import asyncio
 import base64
+import importlib.metadata
 import logging
 import ssl
 import time
+
 import websockets
 import websockets.asyncio
 import websockets.asyncio.server
-import importlib.metadata
 from api import api_handler
 from charge_point_csms_v16 import ChargePoint_CSMS_v16
 from charge_point_lc_v16 import ChargePoint_LC_v16
 from config import config
 from model import ChargeChange, Charger, Group, Session, Tag, Transaction
 from ocpp.v16.enums import ChargePointStatus, ChargingProfileStatus, ClearChargingProfileStatus, Reason
-from util import time_str, gen_sha_256
+from util import gen_sha_256, time_str
 from websockets.frames import CloseCode
 
 # balanz_version = importlib.metadata.version('balanz')
@@ -186,11 +187,11 @@ async def balanz_loop(group: Group):
     There will be one loop running as a task per allocation group. This loop will call the balanz() function on
     the group at the interval configured and then proceed to implement any allocation/offer changes requested.
 
-    loop will run every "run_interval" seconds (around say 10 seconds) to check for more urgent events.
+    loop will run every "run_interval" seconds (default 5 seconds) to check for more urgent events.
     These include new chargers to be initialized, or the detection of new charging sessions (as indicated by a flag
     on the connector).
 
-    Once every "intervals_full" times (say 6 or 12), a full run will be done regardless.
+    Once every "intervals_full" times (default 12, so once every minute), a full run will be done regardless.
     """
 
     # Initial delay before loop. This allows things to startup nicely.
@@ -390,7 +391,7 @@ async def model_watchdog():
 
 async def main():
     """main. Argument parsing and startup."""
-    logger.warning(f'Balanz version {balanz_version}')
+    logger.warning(f"Balanz version {balanz_version}")
 
     # Argument stuff.
     parser = argparse.ArgumentParser(description="balanz. OCPP CSMS or LC with smart charging capabilities")

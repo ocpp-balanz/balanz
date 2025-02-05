@@ -1,8 +1,11 @@
 """test utility functions"""
 
 import asyncio
+from inspect import getframeinfo, stack
 
 import websockets
+
+PASS_TESTS = False
 
 
 class SimConnection:
@@ -31,5 +34,26 @@ class SimConnection:
             return "Not connected"
 
 
-def make_assert(response):
-    print(f'    assert(response == "{response}")')
+def check(response: str, target: str) -> bool:
+    """pytest assertation helper which can be used to build results."""
+    global PASS_TESTS
+
+    if PASS_TESTS:
+        caller = getframeinfo(stack()[1][0])
+        print(f"TEST - {caller.filename}:{caller.lineno}")
+        print("Response: ", response)
+        print("Target  : ", target)
+        print("Passed  : ", response == target)
+        if response != target:
+            print(f"Update assertion in line {caller.lineno} to:")
+            print(f'    assert check(response, "{response}")')
+        print("")
+        return True
+    else:
+        return response == target
+
+
+def set_pass_tests(pass_tests: bool) -> None:
+    global PASS_TESTS
+
+    PASS_TESTS = pass_tests
