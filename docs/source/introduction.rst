@@ -27,13 +27,39 @@ as a full (simple) - :term:`CSMS`/:term:`CS`.
 
 Below diagram shows different :term:`balanz` deployment options.
 
-.. code-block:: text
+.. graphviz::
+    
+    graph G {
+        rankdir="LR";
 
- EV <--> Charger <-- OCPP --> balanz LC (w/Smart Charging) <-- OCPP --> CSMS/CS
- EV <--> Charger <-- OCPP --> balanz CSMS/CS (w/Smart Charging)
- EV <--> Charger <-- OCPP --> balanz LC (wo/Smart Charging) <-- OCPP --> CSMS/CS
- EV <--> Charger <-- OCPP --> balanz CSMS/CS (wo/Smart Charging)
+        ev1 [label="EV", shape="box"];
+        charger1 [label="Charger", shape="box"];
+        bz1 [label="balanz CSMS/CS (w/Smart Charging)", shape="box"];
+        ev1 -- charger1 [dir="both"];
+        charger1 -- bz1 [label="OCPP", dir="both"];
 
+        ev3 [label="EV", shape="box"];
+        charger3 [label="Charger", shape="box"];
+        bz3 [label="balanz CSMS/CS (wo/Smart Charging)", shape="box"];
+        ev3 -- charger3 [dir="both"];
+        charger3 -- bz3 [label="OCPP",  dir="both"];
+
+        ev2 [label="EV", shape="box"];
+        charger2 [label="Charger", shape="box"];
+        bz2 [label="balanz LC (wo/Smart Charging)", shape="box"];
+        csms2 [label="CSMS", shape="box"];
+        ev2 -- charger2 [dir="both"];
+        charger2 -- bz2 [label="OCPP", dir="both"];
+        bz2 -- csms2 [label="OCPP", dir="both"];
+
+        ev0 [label="EV", shape="box"];
+        charger0 [label="Charger", shape="box"];
+        bz0 [label="balanz LC (w/Smart Charging)", shape="box"];
+        csms0 [label="CSMS", shape="box"];
+        ev0 -- charger0 [dir="both"];
+        charger0 -- bz0 [label="OCPP", dir="both"];
+        bz0 -- csms0 [label="OCPP", dir="both"];
+    }
 
 :term:`balanz` supports :term:`OCPP-J` v1.6.
 

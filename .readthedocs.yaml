@@ -9,6 +9,8 @@ build:
   os: ubuntu-lts-latest
   tools:
     python: "3.12"
+  apt_packages:
+    - graphviz
     # You can also specify other tool versions:
     # nodejs: "20"
     # rust: "1.70"
