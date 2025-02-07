@@ -297,9 +297,7 @@ class Transaction:
         self.usage_meter: float = None  # Last usage in A as reported by the charger.
         self.energy_meter: int = meter_start  # In Wh (Watt hours). Will be updated by MeterValues messages.
         self.last_usage_time: float = start_time
-        self.charging_history: list[ChargingHistory] = [
-            ChargingHistory(timestamp=time.time(), offered=connector.offered)
-        ]
+        self.charging_history: list[ChargingHistory] = []
 
         # If tag is known, check if it has a priority.
         if id_tag in Tag.tag_list and Tag.tag_list[id_tag].priority is not None:

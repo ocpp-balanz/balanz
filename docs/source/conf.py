@@ -31,4 +31,10 @@ html_theme = 'alabaster'
 html_static_path = ['_static']
 html_logo = 'balanz.jpg'
 html_theme_options = {
+    "code_font_size": "0.8em",
+    "github_user": "ocpp-balanz",
+    "github_repo": "balanz",
+    "github_banner": True,
+    "show_powered_by": False,
+
 }

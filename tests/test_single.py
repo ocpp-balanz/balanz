@@ -7,6 +7,7 @@ import pytest
 from utils import SimConnection, check, set_pass_tests
 
 # Uncomment below to enable test passing and automatic assert statement creation.
+# May also require to comment out below pytest.fixture statement to make it run.
 # set_pass_tests(False)
 
 

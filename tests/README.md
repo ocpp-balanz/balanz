@@ -11,17 +11,19 @@ the startup of `ocpp` instances is also assumed - may be automated later.
 
 A windows script `ocpp_start.bat` may be used to start the instances.
 
+## A note on timing
+
+The tests take a VERY long time to run as their rely on the standard timings. An alternative would have
+been to manipulate the clock logic to speed things up, but the risk that it would not correctly cover
+the intended functional test was simply too great.
+
+So, start the tests and do something else while they run!
+
 ## Testing single charger - normal operations
 
 Simple tests covered by test_single.py. Assumings running `ocpp` instance mimicing charger `TACW225426G463`
 listening on the default websocket command interface port (1234) on localhost connected to a running balanz
 full CS instance.
-
-The tests take a long time to run as their rely on the standard timings. An alternative would have 
-been to manipulate the clock logic to speed things up, but the risk that it would not correctly cover
-the intended functional test was simply too great.
-
-So, start the tests and do something else while it runs!
 
 ## balanz across multiple chargers
 
@@ -56,4 +58,3 @@ RR2-LOW,RR2,Road Runner 2 Site low priority,1,
 RR2-HIGH,RR2,Road Runner 2 Site low priority,3,
 Default,,Default Group for autoregistered chargers,,
 ```
-

@@ -207,9 +207,7 @@ class ChargePoint_CSMS_v16(ChargePoint_v16):
         auth_string = self.charger.charger_id + ":" + authorizationKey
         auth_string_b64 = base64.b64encode(auth_string.encode()).decode()
         self.charger.auth_sha = gen_sha_256("Basic " + auth_string_b64)
-        logger.info(
-            f"Succesfully set AuthorizationKey for {self.charger.charger_id}. Sha is {self.charger.auth_sha}"
-        )
+        logger.info(f"Succesfully set AuthorizationKey for {self.charger.charger_id}. Sha is {self.charger.auth_sha}")
 
         # Rewriting CSV file. Maybe not super-pretty. Must review if better place to do this.
         Charger.write_csv(config["model"]["chargers_csv"])

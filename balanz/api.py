@@ -118,16 +118,16 @@ async def api_handler(websocket):
                 elif not result and command == "GetChargers":
                     charger_id = payload.get("charger_id", None)
                     group_id = payload.get("group_id", None)
-                    chargers = [
-                        c
-                        for c in Charger.charger_list.values()
-                        if charger_id
-                        and charger_id == c.charger_id
-                        or group_id
-                        and c.group_id == group_id
-                        or charger_id is None
-                        and group_id is None
-                    ]
+
+                    if group_id:
+                        if group_id not in Group.group_list:
+                            charger_list = []  # Or, NoSuchGroup?
+                        else:
+                            charger_list: Group = Group.group_list[group_id].all_chargers()
+                    else:
+                        charger_list = Charger.charger_list.values()
+
+                    chargers = [c for c in charger_list if charger_id and charger_id == c.charger_id or not charger_id]
                     result = [MessageType.CallResult, message_id, [c.external() for c in chargers]]
                 elif not result and command == "GetTags":
                     result = [MessageType.CallResult, message_id, [t.external() for t in Tag.tag_list.values()]]
