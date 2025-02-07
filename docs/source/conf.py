@@ -19,7 +19,7 @@ author = 'Jens Vedel Markussen'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["sphinx.ext.autodoc"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.graphviz"]
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -36,5 +36,4 @@ html_theme_options = {
     "github_repo": "balanz",
     "github_banner": True,
     "show_powered_by": False,
-
 }
