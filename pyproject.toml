@@ -11,11 +11,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 ocpp = "^2.0.0"
-cryptography = "^44.0.0"
 pydantic = "^1.0.0"
 websockets = "^14.2.0"
 python = "^3.13.0"
-jsonpickle = "^4.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8"
