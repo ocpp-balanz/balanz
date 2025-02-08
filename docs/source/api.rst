@@ -46,8 +46,8 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - (None)
      - Returns drawing of all groups, chargers, sessions, and states.
    * - ``SetChargePriority``
-     - ``charger_id, connector_id, priority``
-     - Update the priority of a session on a connector
+     - ``charger_id, alias, connector_id, priority``
+     - Update the priority of a session on a connector. 
    * - ``SetBalanzState``
      - ``group_id, suspend`` (True or False)
      - Suspend or resume balanz() for an allocation group
@@ -127,3 +127,8 @@ reported.
      - ``charger_id, message_type`` (one of ``MeterValues``, ``BootNotificaton``, ``DiagnosticsStatusNotification``,
        ``FirmwareStatusNotification``, ``Heartbeat``, ``StatusNotification``)
      - Trigger an OCPP message to be sent by the charger
+
+.. note::
+  In all calls (model or OCPP calls) where a charger is identified using ``charger_id``, it is 
+  possible to instead identify the charger by an alternative ``alias`` argument matching the
+  charger alias. If both are supplied, `charger_id` is used.
