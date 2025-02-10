@@ -41,7 +41,8 @@ install: .install-poetry model_init
 	poetry install
 
 docker:
-	@docker build -t balanz .
+	@docker build -t balanz:latest .
+	@docker tag balanz:latest balanz:$(BALANZ_VERSION)
 
 docs: .install-poetry
 	poetry run sphinx-build -b html docs/source docs/build
