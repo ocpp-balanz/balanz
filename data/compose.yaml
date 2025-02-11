@@ -1,0 +1,14 @@
+services:
+  balanz:
+    image: balanz
+    restart: always
+    ports:
+      - 9999:9999
+    volumes:
+      - ./model:/app/model
+      - ./config:/app/config
+      - ./history:/app/history
+      - ./cert:/app/cert
+    environment:
+      - TZ=Europe/Copenhagen
+    command: [ "python", "balanz.py" ]

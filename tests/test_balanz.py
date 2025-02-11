@@ -91,7 +91,7 @@ async def test_case1():
     response = await rr2_04.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 6.0 A, energy (rounded): 100 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 6.0 A, energy: 100 Wh, delay: False, max_usage: None",
     )
 
     _, response = await bz_conn.command("GetChargers", {"group_id": "RR2"})
@@ -139,7 +139,7 @@ async def test_case1():
     response = await rr2_04.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 8.0 A, energy (rounded): 500 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 8.0 A, energy: 500 Wh, delay: False, max_usage: None",
     )
 
     # rr2_03 has 16A limit. However, 8A will stay at rr2_04
@@ -152,7 +152,7 @@ async def test_case1():
     response = await rr2_03.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 16.0 A, energy (rounded): 2500 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 16.0 A, energy: 2500 Wh, delay: False, max_usage: None",
     )
 
     # Enter, next player. High priority rr2_01. Set the max to 16 and let it do it's things
@@ -168,7 +168,7 @@ async def test_case1():
     response = await rr2_01.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 16.0 A, energy (rounded): 2900 Wh, delay: False, max_usage: 16.0",
+        "Status: Charging, transaction_id: 1, offer: 16.0 A, energy: 2900 Wh, delay: False, max_usage: 16.0",
     )
 
     # Last one enters, will tag with a high priority tag (priority 10), but will set a max of 10
@@ -185,25 +185,25 @@ async def test_case1():
     response = await rr2_01.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 16.0 A, energy (rounded): 6300 Wh, delay: False, max_usage: 16.0",
+        "Status: Charging, transaction_id: 1, offer: 16.0 A, energy: 6300 Wh, delay: False, max_usage: 16.0",
     )
 
     response = await rr2_02.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 12.0 A, energy (rounded): 400 Wh, delay: False, max_usage: 10.0",
+        "Status: Charging, transaction_id: 1, offer: 12.0 A, energy: 400 Wh, delay: False, max_usage: 10.0",
     )
 
     response = await rr2_03.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 12.0 A, energy (rounded): 7200 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 12.0 A, energy: 7200 Wh, delay: False, max_usage: None",
     )
 
     response = await rr2_04.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 8.0 A, energy (rounded): 4200 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 8.0 A, energy: 4200 Wh, delay: False, max_usage: None",
     )
 
     _, response = await bz_conn.command("GetChargers", {"group_id": "RR2"})
@@ -251,24 +251,24 @@ async def test_case1():
     response = await rr2_01.command("status")
     assert check(
         response,
-        "Status: Available, transaction_id: None, offer: 0.0 A, energy (rounded): 0 Wh, delay: False, max_usage: 16.0",
+        "Status: Available, transaction_id: None, offer: 0.0 A, energy: 0 Wh, delay: False, max_usage: 16.0",
     )
     response = await rr2_02.command("status")
     assert check(
         response,
-        "Status: SuspendedEV, transaction_id: 1, offer: 12.0 A, energy (rounded): 1100 Wh, delay: True, max_usage: 10.0",
+        "Status: SuspendedEV, transaction_id: 1, offer: 12.0 A, energy: 1100 Wh, delay: True, max_usage: 10.0",
     )
 
     response = await rr2_03.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 16.0 A, energy (rounded): 8200 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 16.0 A, energy: 8200 Wh, delay: False, max_usage: None",
     )
 
     response = await rr2_04.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 8.0 A, energy (rounded): 5100 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 8.0 A, energy: 5100 Wh, delay: False, max_usage: None",
     )
 
     # unplug to stop charging.

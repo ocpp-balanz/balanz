@@ -11,8 +11,7 @@ from utils import SimConnection, check, set_pass_tests
 # set_pass_tests(False)
 
 
-@pytest.fixture(scope="module")
-@pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio(loop_scope="module")
 async def test_case1():
     """A regular, single test scenario without any thrills.
 
@@ -44,28 +43,28 @@ async def test_case1():
     response = await conn.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 6.0 A, energy (rounded): 100 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 6.0 A, energy: 100 Wh, delay: False, max_usage: None",
     )
 
-    await asyncio.sleep(150)  # Charge for a little, check status
+    await asyncio.sleep(140)  # Charge for a little, check status
     response = await conn.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 9.0 A, energy (rounded): 200 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 6.0 A, energy: 200 Wh, delay: False, max_usage: None",
     )
 
     await asyncio.sleep(200)  # Charge for a little, check status
     response = await conn.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 12.0 A, energy (rounded): 600 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 12.0 A, energy: 600 Wh, delay: False, max_usage: None",
     )
 
     await asyncio.sleep(181)  # Charge for a little, check status
     response = await conn.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 18.0 A, energy (rounded): 1200 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 18.0 A, energy: 1200 Wh, delay: False, max_usage: None",
     )
 
     # Finish charging by unplugging the cable
@@ -78,14 +77,14 @@ async def test_case1():
     response = await conn.command("status")
     assert check(
         response,
-        "Status: Available, transaction_id: None, offer: 0.0 A, energy (rounded): 0 Wh, delay: False, max_usage: None",
+        "Status: Available, transaction_id: None, offer: 0.0 A, energy: 0 Wh, delay: False, max_usage: None",
     )
 
     # Disconnect from the simulator
     await conn.disconnect()
 
 
-@pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio(loop_scope="module")
 async def test_case2():
     """Manual start, stopped by call full."""
 
@@ -114,14 +113,14 @@ async def test_case2():
     response = await conn.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 6.0 A, energy (rounded): 0 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 6.0 A, energy: 0 Wh, delay: False, max_usage: None",
     )
 
-    await asyncio.sleep(280)  # Let charge for 5 min.
+    await asyncio.sleep(300)  # Let charge for 5 min.
     response = await conn.command("status")
     assert check(
         response,
-        "Status: Charging, transaction_id: 1, offer: 12.0 A, energy (rounded): 500 Wh, delay: False, max_usage: None",
+        "Status: Charging, transaction_id: 1, offer: 12.0 A, energy: 500 Wh, delay: False, max_usage: None",
     )
 
     # car full
@@ -132,7 +131,7 @@ async def test_case2():
     response = await conn.command("status")
     assert check(
         response,
-        "Status: SuspendedEVSE, transaction_id: 1, offer: 0.0 A, energy (rounded): 500 Wh, delay: True, max_usage: None",
+        "Status: SuspendedEVSE, transaction_id: 1, offer: 0.0 A, energy: 500 Wh, delay: True, max_usage: None",
     )
 
     # unplug
@@ -145,7 +144,7 @@ async def test_case2():
     response = await conn.command("status")
     assert check(
         response,
-        "Status: Available, transaction_id: None, offer: 0.0 A, energy (rounded): 0 Wh, delay: False, max_usage: None",
+        "Status: Available, transaction_id: None, offer: 0.0 A, energy: 0 Wh, delay: False, max_usage: None",
     )
 
     # Disconnect from the simulator

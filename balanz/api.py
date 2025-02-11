@@ -63,7 +63,7 @@ async def api_handler(websocket):
                     if alias and not "charger_id" in payload:
                         id = [c.charger_id for c in Charger.charger_list.values() if c.alias == alias]
                         if len(id) == 1:
-                            payload["charger_id"] =  id[0]
+                            payload["charger_id"] = id[0]
 
                 # Common check for charger specified by id, known, and connected
                 if not result and command in [
