@@ -23,11 +23,14 @@ ENV POETRY_NO_INTERACTION=1 \
 
 # poetry and dependencies
 RUN pip install poetry
-COPY pyproject.toml poetry.lock /app/
+COPY pyproject.toml poetry.lock README.md /app/
 RUN poetry install --no-ansi --only=main --no-root
 
 # Code
 COPY balanz/*.py /app
+
+# pip install in order to secure metadata access
+RUN pip install .
 
 # Run app.py when the container launches
 CMD ["python", "balanz.py"]
