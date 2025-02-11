@@ -47,6 +47,42 @@ class ChargePoint_v16(cp):
         self.charger: Charger = charger
         self.charger.last_update = time.time()
 
+    def _on_meter_values(self, **kwargs):
+        try:
+            if "transaction_id" not in kwargs:
+                logger.debug("Ignoring meter_values as not in transaction")
+            else:
+                meter_value = kwargs["meter_value"][0]
+                timestamp = parse_time(meter_value["timestamp"])
+                sampled_value = meter_value["sampled_value"]
+
+                def extract_sv(measurand: str, phase: str, not_found_value = None) -> float:
+                    for sv in sampled_value:
+                        sv_measurand = sv["measurand"] if "measurand" in sv else "Energy.Active.Import.Register"
+                        if sv_measurand == measurand:
+                            if (phase and "phase" in sv and sv["phase"] == phase) or (not phase and "phase" not in sv):
+                                return float(sv["value"])
+                    return not_found_value
+
+                usage_meter = max(
+                    extract_sv("Current.Import", "L1", 0),
+                    extract_sv("Current.Import", "L2", 0),
+                    extract_sv("Current.Import", "L3", 0),
+                )
+                energy_meter = extract_sv("Energy.Active.Import.Register", None)
+                offered = extract_sv("Current.Offered", None)
+                self.charger.meter_values(
+                    connector_id=kwargs["connector_id"],
+                    transaction_id=kwargs["transaction_id"],
+                    timestamp=timestamp,
+                    usage_meter=usage_meter,
+                    energy_meter=energy_meter,
+                    offered=offered,
+                )
+            return call_result.MeterValues()
+        except Exception as e:
+            logger.error(f'Exception in _on_meter_values: {e}')
+
     # -------------------------------------
     # Common call functions
     # -------------------------------------

@@ -841,9 +841,9 @@ class Charger:
                 )
                 # Have an opinion about connector status..
                 if not status_in_transaction(connector.status):
-                    if usage_meter > 0 and offered > 0:
+                    if usage_meter > 0 and (not offered or offered > 0):
                         connector.status = ChargePointStatus.charging
-                    elif usage_meter == 0 and offered > 0:
+                    elif usage_meter == 0 and (not offered or offered > 0):
                         connector.status = ChargePointStatus.suspended_ev
                     else:
                         connector.status = ChargePointStatus.suspended_evse

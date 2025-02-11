@@ -77,37 +77,8 @@ class ChargePoint_LC_v16(ChargePoint_v16):
         self.charger.heartbeat()
 
     @after(Action.meter_values)
-    # TODO: This function is actually equal across LC and CSMS. That is not good. Abstract it somehow.
     def on_meter_values(self, **kwargs):
-        # TODO: Error handling in case things not 100% as expected.
-        meter_value = kwargs["meter_value"][0]
-        timestamp = parse_time(meter_value["timestamp"])
-        sampled_value = meter_value["sampled_value"]
-
-        def extract_sv(measurand: str, phase: str) -> float:
-            for sv in sampled_value:
-                if sv["measurand"] == measurand and (
-                    (phase and sv["phase"] == phase) or (not phase and "phase" not in sv)
-                ):
-                    return float(sv["value"])
-            return 0
-
-        # Usage will be determine as the maximum Current import across the 3 phases.
-        usage_meter = max(
-            extract_sv("Current.Import", "L1"),
-            extract_sv("Current.Import", "L2"),
-            extract_sv("Current.Import", "L3"),
-        )
-        energy_meter = extract_sv("Energy.Active.Import.Register", None)
-        offered = extract_sv("Current.Offered", None)
-        self.charger.meter_values(
-            connector_id=kwargs["connector_id"],
-            transaction_id=kwargs.get("transaction_id", None),
-            timestamp=timestamp,
-            usage_meter=usage_meter,
-            energy_meter=energy_meter,
-            offered=offered,
-        )
+        self._on_meter_values(**kwargs)
 
     @after(Action.status_notification)
     def on_status_notification(self, **kwargs):

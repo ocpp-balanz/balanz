@@ -71,38 +71,7 @@ class ChargePoint_CSMS_v16(ChargePoint_v16):
 
     @on(Action.meter_values)
     def on_meter_values(self, **kwargs):
-        # Really not nice that this is replicated with LC...
-        if "transaction_id" not in kwargs:
-            logger.debug("Ignoring meter_values as not in transaction")
-        else:
-            # TODO: Error handling in case things not 100% as expected.
-            meter_value = kwargs["meter_value"][0]
-            timestamp = parse_time(meter_value["timestamp"])
-            sampled_value = meter_value["sampled_value"]
-
-            def extract_sv(measurand: str, phase: str) -> float:
-                for sv in sampled_value:
-                    if sv["measurand"] == measurand and (
-                        (phase and sv["phase"] == phase) or (not phase and "phase" not in sv)
-                    ):
-                        return float(sv["value"])
-
-            usage_meter = max(
-                extract_sv("Current.Import", "L1"),
-                extract_sv("Current.Import", "L2"),
-                extract_sv("Current.Import", "L3"),
-            )
-            energy_meter = extract_sv("Energy.Active.Import.Register", None)
-            offered = extract_sv("Current.Offered", None)
-            self.charger.meter_values(
-                connector_id=kwargs["connector_id"],
-                transaction_id=kwargs["transaction_id"],
-                timestamp=timestamp,
-                usage_meter=usage_meter,
-                energy_meter=energy_meter,
-                offered=offered,
-            )
-        return call_result.MeterValues()
+        return self._on_meter_values(**kwargs)
 
     @on(Action.status_notification)
     def on_status_notification(self, **kwargs):
