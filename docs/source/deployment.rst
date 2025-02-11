@@ -58,3 +58,14 @@ required.
 .. literalinclude :: ../../examples/docker/compose.yaml
    :language: text
    :caption: Example Docker Compose file
+
+
+docker hub/docker.io
+--------------------
+
+Prebuilt and versioned images will be available on `docker-hub <https://hub.docker.com/r/jensdock/balanz>`_.
+
+Pull the latest image by doing::
+
+    docker pull jensdock/balanz
+
