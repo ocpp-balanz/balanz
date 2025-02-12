@@ -46,7 +46,7 @@ async def test_case1():
         "Status: Charging, transaction_id: 1, offer: 6.0 A, energy: 100 Wh, delay: False, max_usage: None",
     )
 
-    await asyncio.sleep(140)  # Charge for a little, check status
+    await asyncio.sleep(120)  # Charge for a little, check status
     response = await conn.command("status")
     assert check(
         response,
@@ -109,7 +109,7 @@ async def test_case2():
     response = await conn.command("tag")
     assert check(response, "Tag Accepted. Parent: , new status: SuspendedEVSE")
 
-    await asyncio.sleep(10)  # Charge for a little, check status
+    await asyncio.sleep(20)  # Charge for a little, check status
     response = await conn.command("status")
     assert check(
         response,

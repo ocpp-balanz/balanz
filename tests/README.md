@@ -19,6 +19,9 @@ the intended functional test was simply too great.
 
 So, start the tests and do something else while they run!
 
+Warning: To be honest, the timings typically make the pytest runs fail. So, for now, the best way is
+to run them using the "trick" described at the start of the test files and run with `python`.
+
 ## Testing single charger - normal operations
 
 Simple tests covered by test_single.py. Assumings running `ocpp` instance mimicing charger `TACW225426G463`
