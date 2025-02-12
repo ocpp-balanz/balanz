@@ -1244,7 +1244,7 @@ class Group:
             ):
                 # Not using full offer (which is above the minimum), so can be reduced.
                 # Will be in effect for the rest of the transaction
-                conn._bz_allocation = ceil(conn.transaction.usage_meter)
+                conn._bz_allocation = ceil(conn.transaction.get_max_recent_usage())
                 if conn._bz_allocation < config.getfloat("balanz", "min_allocation"):
                     # Do not to go below the minimum
                     conn.transaction._bz_allocation = config.getfloat("balanz", "min_allocation")
