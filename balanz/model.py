@@ -1269,6 +1269,7 @@ class Group:
                 ):
                     # Cannot increase yet.
                     conn._bz_max = conn.offered
+                    logger.debug(f"Not yet ready to increase offer for {conn.id_str()}.")
                 else:
                     # ... and only if usage has proven to be close to what is offered
                     if conn.offered - conn.transaction.get_max_recent_usage() < config.getfloat(
@@ -1277,10 +1278,12 @@ class Group:
                         conn._bz_max = conn.offered + config.getfloat("balanz", "max_offer_increase")
                     else:
                         conn._bz_max = conn.offered
+                        logger.debug(f"Recent usage for {conn.id_str()} is {conn.transaction.get_max_recent_usage()} vs offer {conn.offered}. Too low to increase")
 
                 # Is there is an (EV related) max detected?
                 if conn.transaction and conn.transaction._bz_ev_max_usage is not None:
                     conn._bz_max = min(conn._bz_max, conn.transaction._bz_ev_max_usage)
+                    logger.debug(f"Restricting {conn.id_str()} to {conn.transaction._bz_ev_max_usage} due to history")
 
                 # But never more than the maximum configured for the connection
                 conn._bz_max = min(conn.conn_max(), conn._bz_max)
