@@ -28,14 +28,14 @@ Groups are defined in a CSV file named ``groups.csv``; file name is configurable
 
     group_id,description,max_allocation
     HQ,HQ Site,00:00-07:59>0=63;08:00-16:59>0=20:3=63;17:00-20:59>5=63;21:00-23:59>0=40:3=63
-    RR1,Road Runner 1 Site chargers,00:00-05:59>0=48;06:00-16:59>0=16:3=32:5=48;17:00-20:59>0=0:5=48;21:00-23:59>0=32:5=48
+    RR1,Road Runner 1 Site,00:00-05:59>0=48;06:00-16:59>0=16:3=32:5=48;17:00-20:59>0=0:5=48;21:00-23:59>0=32:5=48
     RR2,Road Runner 2 Site,00:00-23:59>0=24:3=40:5=48
     Default,Default Group for autoregistered chargers,
 
 
 Note that ``max_allocation`` values (in Amps) are defined as values per priority within a schedule. All 24 hours should be covered
 as is the case in the examples above. In this allocation maximum may e.g. be increased during the night where office site 
-activities are not as demanding in terms of electricity. A schedule may also specify times in teh day where charging should be
+activities are not as demanding in terms of electricity. A schedule may also specify times in the day where charging should be
 limited, e.g. due to higher electricity costs.
 
 For example, on the ``RR1`` site above in the time interval between 17:00 and 20:59 (most expensive timeslot in Denmark due to
