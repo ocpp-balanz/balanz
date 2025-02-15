@@ -70,7 +70,7 @@ def draw_group(group: Group, historic: bool = False, prefix: str = "") -> str:
     s = ""
 
     # Group header/info
-    s += f"{prefix}Group {group.group_id} ({group.description}), "
+    s += f"{prefix}Group {group.group_id} ({group.description}),"
     s += f" max_allocation: {schedule_value_now_external(group._max_allocation)}, usage: {group.usage():.2f},"
     s += f" offered: {group.offered()} A\n"
 
