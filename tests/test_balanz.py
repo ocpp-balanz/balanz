@@ -85,7 +85,7 @@ async def test_case1():
     response = await rr2_04.command("tag E08CEE18")
     assert check(response, "Tag Accepted. Parent: ACME, new status: SuspendedEVSE")
 
-    await asyncio.sleep(20)  # Charge for a little, check status
+    await asyncio.sleep(30)  # Charge for a little, check status
     response = await rr2_04.command("status")
     assert check(
         response,

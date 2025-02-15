@@ -67,6 +67,9 @@ def schedule_value_now(schedule: str) -> list[tuple[int, float]]:
     Returns list of tuples (priority, Ampere) value for first matched interval (they should not
     overlap, but could). Returns None if no interval covers current time (should not happen!)
     """
+    if schedule is None:
+        return []
+
     dt = datetime.now()
     now_hour = dt.hour
     now_mm = dt.minute

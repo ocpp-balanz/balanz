@@ -76,18 +76,17 @@ Smart Charging decisions to balanz.
 Charging priority
 -----------------
 
-Power will be allocated by prority (higher is better). The priority for a connnector on a charger will take its default from a containing
-group, but can be overwritten by a priority associated with the tag used to start the session, or even further overwritten per charging
-session (transaction) using a specific API call.
+Power will be allocated by prority (higher is better). The priority for a connnector on a charger can be overwritten by a priority associated
+with the tag used to start the session, or even further overwritten per charging session (transaction) using a specific API call.
 
 Besides prioritizing allocation between charging sessions, priority values also define if a given total allocation may be extended closer
 to the actual maximum. In this way, higher priority sesssions be allowed to charge at a higher rate than would otherwise be the case 
 (typically at expensive times.)
 
-Reviewing a session from a group:
+Reviewing a charging priority schedule from a group (``max_allocation`` field):
 
 .. code-block::
     :caption: Example `groups.csv` file
 
-    group_id,parent_id,description,priority,max_allocation
-    HQ,ACME,HQ site,,00:00-07:59>0=63;08:00-16:59>0=20:3=63;17:00-20:59>5=63;21:00-23:59>0=40:3=63
+    group_id,description,max_allocation
+    HQ,HQ Site,00:00-07:59>0=63;08:00-16:59>0=20:3=63;17:00-20:59>5=63;21:00-23:59>0=40:3=63

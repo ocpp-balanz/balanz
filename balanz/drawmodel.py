@@ -45,6 +45,7 @@ def draw_charger(charger: Charger, historic: bool = False, prefix: str = "") -> 
     s += (
         f'{prefix} |- {charger.charger_id} {"(" + charger.alias + ")" if charger.alias != "" else ""}"'
         f'/{"C" if hasattr(charger, "ocpp_ref") and charger.ocpp_ref is not None else "NC"} {charger.description}, '
+        f'priority: {charger.priority}, ' 
         f"firmware: {charger.firmware_version}, updated: {time_str(charger.last_update)}, "
         f"conn_max: {charger.conn_max} A\n"
     )
@@ -69,13 +70,9 @@ def draw_group(group: Group, historic: bool = False, prefix: str = "") -> str:
     s = ""
 
     # Group header/info
-    s += f"{prefix}Group {group.group_id} ({group.description}) parent: {group.parent_id}, priority: {group.priority},"
+    s += f"{prefix}Group {group.group_id} ({group.description}), "
     s += f" max_allocation: {schedule_value_now_external(group._max_allocation)}, usage: {group.usage():.2f},"
     s += f" offered: {group.offered()} A\n"
-
-    # Sub-groups ?
-    for sg in sorted(group.subgroups.values(), key=lambda x: x.group_id):
-        s += draw_group(group=sg, historic=historic, prefix=prefix + "  ")
 
     # Chargers
     for c in sorted(
@@ -89,4 +86,4 @@ def draw_group(group: Group, historic: bool = False, prefix: str = "") -> str:
 def draw_all(historic: bool = False) -> str:
     """draw everything in the system"""
     headerline = f"Balanz groups status as of {time_str(time.time())}\n"
-    return headerline + "".join([draw_group(g, historic) for g in Group.group_list.values() if g.parent_id is None])
+    return headerline + "".join([draw_group(g, historic) for g in Group.group_list.values()])

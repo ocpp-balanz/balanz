@@ -3,10 +3,10 @@ Balanz model.
 
 OCPP-based modelling to support smart-charging rebalancing across groups of chargers (Balanz).
 
-Groups are used to group other groups OR chargers.
+Groups are used to group chargers, allowing the all-important specification of maximum allocation.
 
-Chargers with 1 or more Connectors make up the charging infrastructure. They will normally be
-associated with a group (but can be free floating for completeness).
+Chargers with 1 or more Connectors make up the charging infrastructure. They will be
+associated with a group.
 
 When Connectors are engaged in a charging transaction, a Transaction will represent this. After
 the charging is complete, a Session object will be created to capture it's history.
@@ -415,7 +415,7 @@ class Connector:
         if self.transaction and self.transaction.priority is not None:
             return self.transaction.priority
         else:
-            return self.charger.priority()
+            return self.charger.priority
 
 
 class Charger:
@@ -429,9 +429,10 @@ class Charger:
     def __init__(
         self,
         charger_id: str,
+        group_id: str,
         alias: str = "",
-        group_id: str = None,
         no_connectors: int = 1,
+        priority: int = 1,
         description: str = None,
         conn_max: int = None,
         auth_sha: str = None,
@@ -446,13 +447,13 @@ class Charger:
         # DB Fields
         self.charger_id = charger_id
         self.alias = alias
-        if group_id and group_id not in Group.group_list:
+        if group_id not in Group.group_list:
             logger.error(f"Group {group_id} not found")
             raise ModelException(f"Group {group_id} not found")
         self.group_id = group_id
+        self.priority = priority
         # Insert charger into group list of chargers
-        if group_id:
-            Group.group_list[group_id].chargers[self.charger_id] = self  #
+        Group.group_list[group_id].chargers[self.charger_id] = self  #
         self.description = description
         self.conn_max = conn_max if conn_max is not None else config.getfloat("balanz", "default_max_allocation")
         self.auth_sha = auth_sha
@@ -488,6 +489,7 @@ class Charger:
             "charger_id",
             "alias",
             "group_id",
+            "priority",
             "description",
             "conn_max",
             "charge_point_model",
@@ -505,7 +507,7 @@ class Charger:
     def read_csv(file: str) -> None:
         """Read chargers from CSV file
 
-        Assumed format: "charger_id","alias","group_id","no_connectors","description","conn_max","auth_sha"
+        Assumed format: "charger_id","alias","group_id","no_connectors","priority","description","conn_max","auth_sha"
         """
         logger.info(f"Reading chargers from {file}")
         with open(file, mode="r") as file:
@@ -516,6 +518,7 @@ class Charger:
                     alias=charger["alias"],
                     group_id=_sn(charger["group_id"]),
                     no_connectors=_in(charger["no_connectors"]),
+                    priority=_in(charger["priority"]),
                     description=charger["description"],
                     conn_max=_fn(charger["conn_max"]),
                     auth_sha=_sn(charger["auth_sha"]),
@@ -533,6 +536,7 @@ class Charger:
                     "alias",
                     "group_id",
                     "no_connectors",
+                    "priority",
                     "description",
                     "conn_max",
                     "auth_sha",
@@ -545,18 +549,14 @@ class Charger:
                     [
                         charger.charger_id,
                         charger.alias,
-                        _sn(charger.group_id),
+                        charger.group_id,
                         len(charger.connectors),
+                        charger.priority,
                         charger.description,
                         _sb(charger.conn_max),
                         _sb(charger.auth_sha),
                     ]
                 )
-
-    @staticmethod
-    def gen_auth_sha(request_auth: str) -> str:
-        """Generate sha256 of request"""
-        return hashlib.sha256(request_auth.encode("utf-8")).hexdigest()
 
     @staticmethod
     def gen_auth() -> str:
@@ -568,21 +568,14 @@ class Charger:
     def remove(self) -> None:
         """Remove Charger from model. Does not work with __del__"""
         Charger.charger_list.pop(self.charger_id)
-        if self.group_id:
-            Group.group_list[self.group_id].chargers.pop(self.charger_id)
+        Group.group_list[self.group_id].chargers.pop(self.charger_id)
 
     def __str__(self) -> str:
         return str(vars(self))
 
     def is_in_group(self, group_id) -> bool:
         """Check if Charger is in specific group_id"""
-        g = Group.group_list[self.group_id]
-        while g:
-            if g.group_id == group_id:
-                return True
-            if g.parent_id is None:
-                return False
-            g = Group.group_list[g.parent_id]
+        return self.group_id == group_id
 
     def offered(self) -> float:
         """Sum of offered from all connector transactions"""
@@ -603,10 +596,6 @@ class Charger:
             for connector in self.connectors.values()
             if connector.transaction and connector.transaction.energy_meter
         )
-
-    def priority(self) -> int:
-        group = Group.group_list[self.group_id]
-        return group.conn_priority()
 
     def charge_change_implemented(self, charge_change: ChargeChange) -> None:
         """Report back that a requested ChargeChange has been done, allowing the fields to be updated in the model."""
@@ -871,11 +860,9 @@ class Charger:
 
 
 class Group:
-    """A group represents a group of groups OR groups of chargers.
+    """A group represents a group of chargers.
 
-    Groups can build a hiearchy. Chargers can only be present on "leaf" groups.
-    Groups with max_allocation set is termed an "allocation group". There should not be
-    several allocation groups along a path in the group tree.
+    Groups with max_allocation set are termed "allocation groups". 
     """
 
     # Static dictionary of Groups. Key is group_id. Value is a Group object.
@@ -884,41 +871,28 @@ class Group:
     def __init__(
         self,
         group_id: str,
-        parent_id: str = None,
         description: str = None,
-        priority: int = None,
         max_allocation: str = None,
     ) -> None:
         """constructor
 
         :raises:
-        ModelException: If trying to be bad, e.g. by ref unknown parent
+        ModelException: If trying to be bad
         """
         self.group_id = group_id
-
-        if parent_id and parent_id not in Group.group_list:
-            raise ModelException(f"No such parent group {parent_id}")
-        self.parent_id = parent_id
         self.description = description
-        self.priority = priority
         self._max_allocation = max_allocation
         self.chargers: dict[Charger] = {}
-        self.subgroups: dict[Group] = {}
 
         # Internal balanz() fields
         self._bz_suspend: bool = False  # Flag used to suspend balanz() loops, should they be running
 
-        # Insert to the group list and into parent group
-        if parent_id:
-            # Check that there are no chargers. We will not accept subgroups to groups with chargers.
-            if Group.group_list[parent_id].chargers:
-                raise ModelException(f"Cannot insert {group_id} below {parent_id} as it already contains chargers")
-            Group.group_list[parent_id].subgroups[group_id] = self
+        # Insert to the group list
         Group.group_list[group_id] = self
-        logger.debug(f"Created group {group_id} with parent {parent_id}")
+        logger.debug(f"Created group {group_id}")
 
     def external(self, charger_details: bool = False) -> str:
-        fields = ["group_id", "parent_id", "description", "priority"]
+        fields = ["group_id", "description"]
         result = {k: self.__dict__[k] for k in fields}
         if charger_details:
             result["chargers"] = [c.external() for c in self.chargers.values()]
@@ -948,7 +922,7 @@ class Group:
     def read_csv(file: str) -> None:
         """Read groups from CSV file
 
-        Assumed format: "group_id","parent_id","description","priority","max_allocation"
+        Assumed format: "group_id","description","max_allocation"
         """
         logger.info(f"Reading groups from {file}")
         with open(file, mode="r") as file:
@@ -956,9 +930,7 @@ class Group:
             for group in reader:
                 Group(
                     group_id=group["group_id"],
-                    parent_id=_sn(group["parent_id"]),
                     description=group["description"],
-                    priority=_in(group["priority"]),
                     max_allocation=_sn(group["max_allocation"]),
                 )
 
@@ -967,14 +939,11 @@ class Group:
         return [g for g in Group.group_list.values() if g.is_allocation_group()]
 
     def is_allocation_group(self) -> bool:
-        return self.max_allocation() is not None
+        return self._max_allocation is not None
 
     def all_chargers(self) -> list[Charger]:
-        """List of all chargers, including from subgroups"""
-        if self.chargers:
-            return [c for c in self.chargers.values()]
-        else:
-            return [c for sg in self.subgroups.values() for c in sg.all_chargers()]
+        """List of all chargers"""
+        return [c for c in self.chargers.values()]
 
     def chargers_not_init(self) -> list[Charger]:
         """List of chargers that are not initialized yet.
@@ -1032,16 +1001,6 @@ class Group:
     def offered(self) -> float:
         """Sum of offered from all chargers in the group"""
         return sum(charger.offered() for charger in self.all_chargers())
-
-    def conn_priority(self) -> int:
-        """Get connection priority from group or parent(s) or default"""
-        g = self
-        while g:
-            if g.priority is not None:
-                return g.priority
-            if g.parent_id is None:
-                return config.getint("balanz", "default_priority")
-            g = Group.group_list[g.parent_id]
 
     def balanz(self) -> tuple[list[ChargeChange], list[ChargeChange]]:
         """balanz logic.

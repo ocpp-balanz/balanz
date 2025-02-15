@@ -56,7 +56,7 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - Returns full group structure.
    * - ``GetChargers``
      - ``group_id, charger_id``
-     - Returns charger(s) matching filter, including chargers in child groups
+     - Returns charger(s) matching filter
    * - ``GetTags``
      - (None)
      - Returns all known tags
