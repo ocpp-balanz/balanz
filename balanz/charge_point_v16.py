@@ -53,7 +53,9 @@ class ChargePoint_v16(cp):
                 logger.debug("Ignoring meter_values as not in transaction")
             else:
                 meter_value = kwargs["meter_value"][0]
-                timestamp = parse_time(meter_value["timestamp"])
+                # TODO: timestamp parsing is sometimes off. Set to now
+#                timestamp = parse_time(meter_value["timestamp"])
+                timestamp = time.time()
                 sampled_value = meter_value["sampled_value"]
 
                 def extract_sv(measurand: str, phase: str, not_found_value = None) -> float:
