@@ -1218,36 +1218,37 @@ class Group:
 
         ############
         # Next, review all connectors asking for allocation and determine their max (desired) usage
-        for conn in [c for c in connectors if not c._bz_done and c.status != ChargePointStatus.suspended_ev]:
-            # Ensure value set
-            conn._bz_max = config.getfloat("balanz", "min_allocation")
-            if conn.offered == 0:
-                conn._bz_max = config.getfloat("balanz", "min_allocation")
+        for conn in [c for c in connectors if not c._bz_done]:
+            if conn.status == ChargePointStatus.suspended_ev:
+                conn._bz_max = 0.0
             else:
-                # Can only increase every X interval
-                if conn.transaction is None or time.time() - conn.transaction._bz_last_offer_time < config.getint(
-                    "balanz", "min_offer_increase_interval"
-                ):
-                    # Cannot increase yet.
-                    conn._bz_max = conn.offered
-                    logger.debug(f"Not yet ready to increase offer for {conn.id_str()}.")
+                if conn.offered == 0:
+                    conn._bz_max = config.getfloat("balanz", "min_allocation")
                 else:
-                    # ... and only if usage has proven to be close to what is offered
-                    if conn.offered - conn.transaction.get_max_recent_usage() < config.getfloat(
-                        "balanz", "margin_increase"
+                    # Can only increase every X interval
+                    if conn.transaction is None or time.time() - conn.transaction._bz_last_offer_time < config.getint(
+                        "balanz", "min_offer_increase_interval"
                     ):
-                        conn._bz_max = conn.offered + config.getfloat("balanz", "max_offer_increase")
-                    else:
+                        # Cannot increase yet.
                         conn._bz_max = conn.offered
-                        logger.debug(f"Recent usage for {conn.id_str()} is {conn.transaction.get_max_recent_usage()} vs offer {conn.offered}. Too low to increase")
+                        logger.debug(f"Not yet ready to increase offer for {conn.id_str()}.")
+                    else:
+                        # ... and only if usage has proven to be close to what is offered
+                        if conn.offered - conn.transaction.get_max_recent_usage() < config.getfloat(
+                            "balanz", "margin_increase"
+                        ):
+                            conn._bz_max = conn.offered + config.getfloat("balanz", "max_offer_increase")
+                        else:
+                            conn._bz_max = conn.offered
+                            logger.debug(f"Recent usage for {conn.id_str()} is {conn.transaction.get_max_recent_usage()} vs offer {conn.offered}. Too low to increase")
 
-                # Is there is an (EV related) max detected?
-                if conn.transaction and conn.transaction._bz_ev_max_usage is not None:
-                    conn._bz_max = min(conn._bz_max, conn.transaction._bz_ev_max_usage)
-                    logger.debug(f"Restricting {conn.id_str()} to {conn.transaction._bz_ev_max_usage} due to history")
+                    # Is there is an (EV related) max detected?
+                    if conn.transaction and conn.transaction._bz_ev_max_usage is not None:
+                        conn._bz_max = min(conn._bz_max, conn.transaction._bz_ev_max_usage)
+                        logger.debug(f"Restricting {conn.id_str()} to {conn.transaction._bz_ev_max_usage} due to history")
 
-                # But never more than the maximum configured for the connection
-                conn._bz_max = min(conn.conn_max(), conn._bz_max)
+                    # But never more than the maximum configured for the connection
+                    conn._bz_max = min(conn.conn_max(), conn._bz_max)
 
         ############
         # Before allocating by priority, the higest priority is to allocate capacity to
