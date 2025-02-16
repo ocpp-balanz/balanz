@@ -1219,6 +1219,8 @@ class Group:
         ############
         # Next, review all connectors asking for allocation and determine their max (desired) usage
         for conn in [c for c in connectors if not c._bz_done and c.status != ChargePointStatus.suspended_ev]:
+            # Ensure value set
+            conn._bz_max = config.getfloat("balanz", "min_allocation")
             if conn.offered == 0:
                 conn._bz_max = config.getfloat("balanz", "min_allocation")
             else:
