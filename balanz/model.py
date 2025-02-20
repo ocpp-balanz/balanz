@@ -430,7 +430,7 @@ class Charger:
         self,
         charger_id: str,
         group_id: str,
-        alias: str = "",
+        alias: str,
         no_connectors: int = 1,
         priority: int = 1,
         description: str = None,
@@ -483,6 +483,21 @@ class Charger:
         Charger.charger_list[charger_id] = self
         logger.debug(f"Created charger {charger_id} with alias {alias} in group {group_id}")
 
+    def update(self,
+        alias: str = None,
+        priority: int = None,
+        description: str = None,
+        conn_max: int = None) -> None:
+        """Update specified field on existing charger"""
+        if alias:
+            self.alias = alias
+        if priority:
+            self.priority = priority
+        if description:
+            self.description = description
+        if conn_max:
+            self.conn_max = conn_max
+
     def external(self) -> str:
         # Hint: See all with [k for k in c.__dict__]
         fields = [
@@ -507,22 +522,37 @@ class Charger:
     def read_csv(file: str) -> None:
         """Read chargers from CSV file
 
+        Can be called again. If so will update (if changed) alias, priority, description, conn_max, and auth_sha
+
+        TODO: Delete case, i.e. if existing charger not mentioned in CSV file.
+
         Assumed format: "charger_id","alias","group_id","no_connectors","priority","description","conn_max","auth_sha"
         """
         logger.info(f"Reading chargers from {file}")
         with open(file, mode="r") as file:
             reader = csv.DictReader(file)
             for charger in reader:
-                Charger(
-                    charger_id=charger["charger_id"],
-                    alias=charger["alias"],
-                    group_id=_sn(charger["group_id"]),
-                    no_connectors=_in(charger["no_connectors"]),
-                    priority=_in(charger["priority"]),
-                    description=charger["description"],
-                    conn_max=_fn(charger["conn_max"]),
-                    auth_sha=_sn(charger["auth_sha"]),
-                )
+                if charger["charger_id"] in Charger.charger_list:
+                    # Update case
+                    c: Charger = Charger.charger_list[charger["charger_id"]]
+                    c.alias = charger["alias"]
+                    c.priority = _in(charger["priority"])
+                    c.description = charger["description"]
+                    c.conn_max = _fn(charger["conn_max"])
+                    c.auth_sha = _sn(charger["auth_sha"])
+                    logger.debug(f"Updated charger {c.charger_id}")
+                else:
+                    # Create case.
+                    Charger(
+                        charger_id=charger["charger_id"],
+                        alias=charger["alias"],
+                        group_id=_sn(charger["group_id"]),
+                        no_connectors=_in(charger["no_connectors"]),
+                        priority=_in(charger["priority"]),
+                        description=charger["description"],
+                        conn_max=_fn(charger["conn_max"]),
+                        auth_sha=_sn(charger["auth_sha"]),
+                    )
 
     @staticmethod
     def write_csv(file: str) -> None:
@@ -1424,6 +1454,7 @@ class Tag:
         status: str = None,
         priority: int = None,
     ) -> None:
+        """Update specified values on an existing tag"""
         if user_name:
             self.user_name = user_name
         if parent_id_tag:

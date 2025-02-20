@@ -57,6 +57,15 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``GetChargers``
      - ``group_id, charger_id``
      - Returns charger(s) matching filter
+   * - ``ReloadChargers``
+     - (None)
+     - Rereads chargers from CSV file
+   * - ``WriteChargers``
+     - (None)
+     - Write chargers from CSV file
+   * - ``UpdateCharger``
+     - ``charger_id, alias, priority, description, conn_max``
+     - Update existing charger. Updates specified field(s). 
    * - ``GetTags``
      - (None)
      - Returns all known tags

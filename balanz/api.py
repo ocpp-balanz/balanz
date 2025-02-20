@@ -138,6 +138,50 @@ async def api_handler(websocket):
 
                     chargers = [c for c in charger_list if charger_id and charger_id == c.charger_id or not charger_id]
                     result = [MessageType.CallResult, message_id, [c.external() for c in chargers]]
+                elif not result and command == "ReloadChargers":
+                    Charger.read_csv(config["model"]["chargers_csv"])
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        {"status": "Accepted"},
+                    ]
+                elif not result and command == "WriteChargers":
+                    Charger.write_csv(config["model"]["chargers_csv"])
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        {"status": "Accepted"},
+                    ]
+                elif not result and command == "UpdateCharger":
+                    charger_id = payload.get("charger_id", None)
+                    alias = payload.get("alias", None)
+                    priority = payload.get("priority", None)
+                    description = payload.get("description", None)
+                    conn_max = payload.get("conn_max", None)
+                    if charger_id is None:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "IllegalArguments"},
+                        ]
+                    elif charger_id not in Charger.charger_list:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "NoSuchCharger"},
+                        ]
+                    else:
+                        Charger.charger_list[charger_id].update(
+                            alias=alias,
+                            priority=priority,
+                            description=description,
+                            conn_max=conn_max
+                        )
+                        result = [
+                            MessageType.CallResult,
+                            message_id,
+                            {"status": "Accepted"},
+                        ]
                 elif not result and command == "GetTags":
                     result = [MessageType.CallResult, message_id, [t.external() for t in Tag.tag_list.values()]]
                 elif not result and command == "ReloadTags":

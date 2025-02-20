@@ -43,6 +43,9 @@
       <option value="SetBalanzState">SetBalanzState</option>
       <option value="GetGroups">GetGroups</option>
       <option value="GetChargers">GetChargers</option>
+      <option value="ReloadChargers">ReloadChargers</option>
+      <option value="WriteChargers">WriteChargers</option>
+      <option value="UpdateCharger">UpdateCharger</option>
       <option value="GetTags">GetTags</option>
       <option value="ReloadTags">ReloadTags</option>
       <option value="WriteTags">WriteTags</option>
@@ -106,6 +109,12 @@
         args = '{"charger_details": false}'
       } else if (command == "GetChargers") {
         args = '{"group_id": "group_id", "charger_id": "charger_id"}'
+      } else if (command == "ReloadChargers") {
+        args = '{}'
+      } else if (command == "WriteChargers") {
+        args = '{}'
+      } else if (command == "UpdateCharger") {
+        args = '{"charger_id": "charger_id", "alias": "alias", "priority": 5, "description": "description", "conn_max": 16}';
       } else if (command == "GetTags") {
         args = '{}'
       } else if (command == "ReloadTags") {
