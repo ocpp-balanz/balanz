@@ -527,7 +527,7 @@ class Charger:
     @staticmethod
     def write_csv(file: str) -> None:
         """Rewrite chargers to CSV file to reflect changes, i.e. auth_sha set"""
-        logger.info(f"Writing chargers from {file}")
+        logger.info(f"Writing chargers to {file}")
         with open(file, mode="w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(
@@ -637,7 +637,7 @@ class Charger:
         Returns True if tag accepted. Second parameter is the optional parent_id_tag (can be None)
         """
         id_tag = id_tag.upper()
-        logger.debug(f'authorize. Checking tag {id_tag}')
+        logger.debug(f"authorize. Checking tag {id_tag}")
         if id_tag not in Tag.tag_list:
             logger.warning("authorize. Rejecting as tag not found")
             return IdTagInfo(status=AuthorizationStatus.invalid)
@@ -864,7 +864,7 @@ class Charger:
 class Group:
     """A group represents a group of chargers.
 
-    Groups with max_allocation set are termed "allocation groups". 
+    Groups with max_allocation set are termed "allocation groups".
     """
 
     # Static dictionary of Groups. Key is group_id. Value is a Group object.
@@ -1242,12 +1242,16 @@ class Group:
                             conn._bz_max = conn.offered + config.getfloat("balanz", "max_offer_increase")
                         else:
                             conn._bz_max = conn.offered
-                            logger.debug(f"Recent usage for {conn.id_str()} is {conn.transaction.get_max_recent_usage()} vs offer {conn.offered}. Too low to increase")
+                            logger.debug(
+                                f"Recent usage for {conn.id_str()} is {conn.transaction.get_max_recent_usage()} vs offer {conn.offered}. Too low to increase"
+                            )
 
                     # Is there is an (EV related) max detected?
                     if conn.transaction and conn.transaction._bz_ev_max_usage is not None:
                         conn._bz_max = min(conn._bz_max, conn.transaction._bz_ev_max_usage)
-                        logger.debug(f"Restricting {conn.id_str()} to {conn.transaction._bz_ev_max_usage} due to history")
+                        logger.debug(
+                            f"Restricting {conn.id_str()} to {conn.transaction._bz_ev_max_usage} due to history"
+                        )
 
                     # But never more than the maximum configured for the connection
                     conn._bz_max = min(conn.conn_max(), conn._bz_max)
@@ -1412,6 +1416,25 @@ class Tag:
         Tag.tag_list[self.id_tag] = self
         logger.debug(f"Created tag {self.id_tag} for user {user_name}. Status is {status}")
 
+    def update(
+        self,
+        user_name: str = None,
+        parent_id_tag: str = None,
+        description: str = None,
+        status: str = None,
+        priority: int = None,
+    ) -> None:
+        if user_name:
+            self.user_name = user_name
+        if parent_id_tag:
+            self.parent_id_tag = parent_id_tag
+        if description:
+            self.description = description
+        if status:
+            self.status = TagStatusType.activated if status == "activated" else "blocked"
+        if priority:
+            self.priority = priority
+
     def external(self) -> str:
         fields = ["id_tag", "user_name", "parent_id_tag", "description", "status", "priority"]
         result = {k: self.__dict__[k] for k in fields}
@@ -1422,9 +1445,13 @@ class Tag:
         """
         Read tags from CSV file
 
+        May be called again to reload tags file.
+
         Assumed format: "id_tag","user_name","parent_id_tag","description","status","priority"
         """
         logger.info(f"Reading tags from {file}")
+        # Delete any existing elements.
+        Tag.tag_list.clear()
         with open(file, mode="r") as file:
             reader = csv.DictReader(file)
             for tag in reader:
@@ -1436,6 +1463,35 @@ class Tag:
                     description=tag["description"],
                     status=_sn(tag["status"]),
                     priority=priority,
+                )
+        logger.info(f"Read {len(Tag.tag_list)} tags")
+
+    @staticmethod
+    def write_csv(file: str) -> None:
+        """Rewrite tags to CSV file to reflect changes"""
+        logger.info(f"Writing tags to {file}")
+        with open(file, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(
+                [
+                    "id_tag",
+                    "user_name",
+                    "parent_id_tag",
+                    "description",
+                    "status",
+                    "priority",
+                ]
+            )
+            for tag in Tag.tag_list.values():
+                writer.writerow(
+                    [
+                        tag.id_tag,
+                        _sb(tag.user_name),
+                        _sb(tag.parent_id_tag),
+                        _sb(tag.description),
+                        tag.status,
+                        _sb(tag.priority),
+                    ]
                 )
 
     def __str__(self) -> str:

@@ -140,6 +140,52 @@ async def api_handler(websocket):
                     result = [MessageType.CallResult, message_id, [c.external() for c in chargers]]
                 elif not result and command == "GetTags":
                     result = [MessageType.CallResult, message_id, [t.external() for t in Tag.tag_list.values()]]
+                elif not result and command == "ReloadTags":
+                    Tag.read_csv(config["model"]["tags_csv"])
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        {"status": "Accepted"},
+                    ]
+                elif not result and command == "WriteTags":
+                    Tag.write_csv(config["model"]["tags_csv"])
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        {"status": "Accepted"},
+                    ]
+                elif not result and command == "UpdateTag":
+                    id_tag = payload.get("id_tag", None)
+                    user_name = payload.get("user_name", None)
+                    parent_id_tag = payload.get("parent_id_tag", None)
+                    description = payload.get("description", None)
+                    status = payload.get("status", None)
+                    priority = payload.get("priority", None)
+                    if id_tag is None:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "IllegalArguments"},
+                        ]
+                    elif id_tag not in Tag.tag_list:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "NoSuchTag"},
+                        ]
+                    else:
+                        Tag.tag_list[id_tag].update(
+                            user_name=user_name,
+                            parent_id_tag=parent_id_tag,
+                            description=description,
+                            status=status,
+                            priority=priority,
+                        )
+                        result = [
+                            MessageType.CallResult,
+                            message_id,
+                            {"status": "Accepted"},
+                        ]
                 elif not result and command == "SetLogLevel":
                     component = payload.get("component", None)
                     loglevel = payload.get("loglevel", None)

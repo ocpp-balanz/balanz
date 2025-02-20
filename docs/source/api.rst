@@ -60,6 +60,15 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``GetTags``
      - (None)
      - Returns all known tags
+   * - ``ReloadTags``
+     - (None)
+     - Reread tags from CSV file
+   * - ``WriteTags``
+     - (None)
+     - Write tags to CSV file
+   * - ``UpdateTag``
+     - ``id_tag, user_name, description, status, priority``
+     - Update existing tag. Updates specified field(s). status can be ``activated`` or ``blocked``
    * - ``GetSessions``
      - ``charger_id, group_id``
      - Returns all historic sessions matching filter

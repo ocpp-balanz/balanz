@@ -44,6 +44,9 @@
       <option value="GetGroups">GetGroups</option>
       <option value="GetChargers">GetChargers</option>
       <option value="GetTags">GetTags</option>
+      <option value="ReloadTags">ReloadTags</option>
+      <option value="WriteTags">WriteTags</option>
+      <option value="UpdateTag">UpdateTag</option>
       <option value="GetSessions">GetSessions</option>
       <option value="SetChargePriority">SetChargePriority</option>
       <option value="SetLogLevel">SetLogLevel</option>
@@ -105,6 +108,12 @@
         args = '{"group_id": "group_id", "charger_id": "charger_id"}'
       } else if (command == "GetTags") {
         args = '{}'
+      } else if (command == "ReloadTags") {
+        args = '{}'
+      } else if (command == "WriteTags") {
+        args = '{}'
+      } else if (command == "UpdateTag") {
+        args = '{"id_tag": "id_tag", "user_name": "user_name", "parent_id_tag": "parent_id_tag", "description": "description", "status": "blocked", "priority": 5}';
       } else if (command == "GetSessions") {
         args = '{"group_id": "group_id", "charger_id": "charger_id"}'
       } else if (command == "SetChargePriority") {

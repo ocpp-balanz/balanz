@@ -5,7 +5,6 @@ Various utility functions used by multiple modules.
 import hashlib
 import math
 import re
-
 from datetime import datetime, time
 
 from ocpp.v16.enums import ChargePointStatus

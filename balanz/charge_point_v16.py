@@ -54,11 +54,11 @@ class ChargePoint_v16(cp):
             else:
                 meter_value = kwargs["meter_value"][0]
                 # TODO: timestamp parsing is sometimes off. Set to now
-#                timestamp = parse_time(meter_value["timestamp"])
+                #                timestamp = parse_time(meter_value["timestamp"])
                 timestamp = time.time()
                 sampled_value = meter_value["sampled_value"]
 
-                def extract_sv(measurand: str, phase: str, not_found_value = None) -> float:
+                def extract_sv(measurand: str, phase: str, not_found_value=None) -> float:
                     for sv in sampled_value:
                         sv_measurand = sv["measurand"] if "measurand" in sv else "Energy.Active.Import.Register"
                         if sv_measurand == measurand:
@@ -83,7 +83,7 @@ class ChargePoint_v16(cp):
                 )
             return call_result.MeterValues()
         except Exception as e:
-            logger.error(f'Exception in _on_meter_values: {e}')
+            logger.error(f"Exception in _on_meter_values: {e}")
 
     # -------------------------------------
     # Common call functions

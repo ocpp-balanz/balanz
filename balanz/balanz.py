@@ -22,7 +22,7 @@ from ocpp.v16.enums import ChargePointStatus, ChargingProfileStatus, ClearChargi
 from util import gen_sha_256, time_str
 from websockets.frames import CloseCode
 
-balanz_version = importlib.metadata.version('balanz')
+balanz_version = importlib.metadata.version("balanz")
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -69,7 +69,7 @@ async def on_connect(websocket: websockets.asyncio.server.ServerConnection):
     if charger_id not in Charger.charger_list:
         if config.getboolean("model", "charger_autoregister"):
             auto_group_id = config.get("model", "charger_autoregister_group")
-            
+
             # Auto-register it the charger
             Charger(charger_id=charger_id, group_id=auto_group_id)
         else:

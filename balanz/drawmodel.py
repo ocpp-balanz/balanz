@@ -45,7 +45,7 @@ def draw_charger(charger: Charger, historic: bool = False, prefix: str = "") -> 
     s += (
         f'{prefix} |- {charger.charger_id} {"(" + charger.alias + ")" if charger.alias != "" else ""}"'
         f'/{"C" if hasattr(charger, "ocpp_ref") and charger.ocpp_ref is not None else "NC"} {charger.description}, '
-        f'priority: {charger.priority}, ' 
+        f"priority: {charger.priority}, "
         f"firmware: {charger.firmware_version}, updated: {time_str(charger.last_update)}, "
         f"conn_max: {charger.conn_max} A\n"
     )
