@@ -82,7 +82,7 @@ async def test_case1():
     await asyncio.sleep(5)
 
     # scan a low priority tag (1) on a low priority charger (rr2_04) which has 8A limit
-    response = await rr2_04.command("tag E08CEE18")
+    response = await rr2_04.command("tag E08cEE18")
     assert check(response, "Tag Accepted. Parent: ACME, new status: SuspendedEVSE")
 
     await asyncio.sleep(30)  # Charge for a little, check status
