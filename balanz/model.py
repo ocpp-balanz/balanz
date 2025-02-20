@@ -636,6 +636,8 @@ class Charger:
 
         Returns True if tag accepted. Second parameter is the optional parent_id_tag (can be None)
         """
+        id_tag = id_tag.upper()
+        logger.debug(f'authorize. Checking tag {id_tag}')
         if id_tag not in Tag.tag_list:
             logger.warning("authorize. Rejecting as tag not found")
             return IdTagInfo(status=AuthorizationStatus.invalid)
@@ -655,10 +657,10 @@ class Charger:
                         logger.info("authorize. Rejecting as tag already used in another transaction.")
                         return IdTagInfo(status=AuthorizationStatus.concurrent_tx)
 
-                logger.info(f"authorize. Accepting. Parent_id is {tag.parent_id_tag}")
+                logger.info(f"authorize. Accepting tag {tag.id_tag}. Parent_id is {tag.parent_id_tag}")
                 return IdTagInfo(status=AuthorizationStatus.accepted, parent_id_tag=tag.parent_id_tag)
             else:
-                logger.warning(f"authorize. Rejecting as tag in state {tag.status}")
+                logger.warning(f"authorize. Rejecting tag {tag.id_tag} as in state {tag.status}")
                 return IdTagInfo(status=AuthorizationStatus.blocked)
 
     def start_transaction(self, connector_id: int, id_tag: str, meter_start: int, timestamp: float) -> int:
@@ -1401,14 +1403,14 @@ class Tag:
         status: TagStatusType = TagStatusType.activated,
         priority: int = None,
     ) -> None:
-        self.id_tag = id_tag
+        self.id_tag = id_tag.upper()
         self.user_name = user_name
         self.parent_id_tag = parent_id_tag
         self.description = description
         self.status = status
         self.priority = priority
-        Tag.tag_list[id_tag] = self
-        logger.debug(f"Created tag {id_tag} for user {user_name}. Status is {status}")
+        Tag.tag_list[self.id_tag] = self
+        logger.debug(f"Created tag {self.id_tag} for user {user_name}. Status is {status}")
 
     def external(self) -> str:
         fields = ["id_tag", "user_name", "parent_id_tag", "description", "status", "priority"]
