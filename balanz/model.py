@@ -175,8 +175,11 @@ class Session:
         # Copy relevant fields from Transaction
         self.charger_id: str = trans.charger_id
         self.charger_alias: str = Charger.charger_list[self.charger_id].alias
+        self.group_id: str = Charger.charger_list[self.charger_id].group_id
         self.connector_id: int = trans.connector_id
         self.id_tag: str = trans.id_tag
+        self.user_name: str = trans.user_name
+
         self.meter_start: float = trans.meter_start
         self.start_time: float = trans.start_time
         self.user_name: str = trans.user_name
@@ -208,7 +211,10 @@ class Session:
                 [
                     self.session_id,
                     self.charger_id,
+                    self.charger_alias,
+                    self.group_id,
                     self.id_tag,
+                    self.user_name,
                     self.stop_id_tag,
                     time_str(self.start_time),
                     time_str(self.end_time),
@@ -218,14 +224,16 @@ class Session:
                     history,
                 ]
             )
-
         logger.info(f"Created session {self.session_id} for connector {self.charger_id}/{self.connector_id}")
 
     def external(self) -> str:
         fields = [
             "session_id",
             "charger_id",
+            "charger_alias",
+            "group_id",
             "id_tag",
+            "user_name",
             "stop_id_tag",
             "start_time",
             "end_time",
@@ -252,7 +260,10 @@ class Session:
                 [
                     "session_id",
                     "charger_id",
+                    "charger_alias",
+                    "group_id",
                     "id_tag",
+                    "user_name",
                     "stop_id_tag",
                     "start_time",
                     "end_time",
