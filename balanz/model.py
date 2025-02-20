@@ -954,17 +954,50 @@ class Group:
     def read_csv(file: str) -> None:
         """Read groups from CSV file
 
+        Can be called again. If so will update (if changed) description and max_allocation
+
+        TODO: No support for deleting groups.
+
         Assumed format: "group_id","description","max_allocation"
         """
         logger.info(f"Reading groups from {file}")
         with open(file, mode="r") as file:
             reader = csv.DictReader(file)
             for group in reader:
-                Group(
-                    group_id=group["group_id"],
-                    description=group["description"],
-                    max_allocation=_sn(group["max_allocation"]),
-                )
+                if group["group_id"] in Group.group_list:
+                    # Update case
+                    g: Group = Group.group_list[group["group_id"]]
+                    g.description = group["description"]
+                    g.max_allocation = _sn(group["max_allocation"])
+                else:
+                    # Create case
+                    Group(
+                        group_id=group["group_id"],
+                        description=group["description"],
+                        max_allocation=_sn(group["max_allocation"]),
+                    )
+
+    @staticmethod
+    def write_csv(file: str) -> None:
+        """Rewrite groups to CSV file to reflect changes"""
+        logger.info(f"Writing groups to {file}")
+        with open(file, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(
+                [
+                    "group_id",
+                    "description",
+                    "max_allocation"
+                ]
+            )
+            for g in Group.group_list.values():
+                writer.writerow(
+                    [
+                        g.group_id,
+                        g.description,
+                        _sb(g._max_allocation)
+                    ]
+                )      
 
     @staticmethod
     def allocation_groups() -> list[Group]:

@@ -42,6 +42,9 @@
       <option value="GetStatus">GetStatus</option>
       <option value="SetBalanzState">SetBalanzState</option>
       <option value="GetGroups">GetGroups</option>
+      <option value="ReloadGroups">ReloadGroups</option>
+      <option value="WriteGroups">WriteGroups</option>
+      <option value="UpdateGroup">UpdateGroup</option>
       <option value="GetChargers">GetChargers</option>
       <option value="ReloadChargers">ReloadChargers</option>
       <option value="WriteChargers">WriteChargers</option>
@@ -107,6 +110,12 @@
         args = '{"suspend": true, "group_id": "group_id"}';
       } else if (command == "GetGroups") {
         args = '{"charger_details": false}'
+      } else if (command == "ReloadGroups") {
+        args = '{}'
+      } else if (command == "WriteGroups") {
+        args = '{}'
+      } else if (command == "UpdateGroup") {
+        args = '{"group_id": "group_id", "description": "description", "max_allocatoin": "max_allocation"}';
       } else if (command == "GetChargers") {
         args = '{"group_id": "group_id", "charger_id": "charger_id"}'
       } else if (command == "ReloadChargers") {

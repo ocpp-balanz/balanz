@@ -124,6 +124,46 @@ async def api_handler(websocket):
                         message_id,
                         [g.external(charger_details) for g in Group.group_list.values()],
                     ]
+                elif not result and command == "ReloadGroups":
+                    Group.read_csv(config["model"]["groups_csv"])
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        {"status": "Accepted"},
+                    ]
+                elif not result and command == "WriteGroups":
+                    Group.write_csv(config["model"]["groups_csv"])
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        {"status": "Accepted"},
+                    ]
+                elif not result and command == "UpdateGroup":
+                    group_id = payload.get("group_id", None)
+                    description = payload.get("description", None)
+                    max_allocation = payload.get("max_allocation", None)
+                    if group_id is None:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "IllegalArguments"},
+                        ]
+                    elif group_id not in Group.group_list:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "NoSuchGroup"},
+                        ]
+                    else:
+                        Group.group_list[group_id].update(
+                            description=description,
+                            max_allocation=max_allocation
+                        )
+                        result = [
+                            MessageType.CallResult,
+                            message_id,
+                            {"status": "Accepted"},
+                        ]
                 elif not result and command == "GetChargers":
                     charger_id = payload.get("charger_id", None)
                     group_id = payload.get("group_id", None)

@@ -44,16 +44,25 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - Returns balanz version and various status information.
    * - ``DrawAll``
      - (None)
-     - Returns drawing of all groups, chargers, sessions, and states.
+     - Returns drawing of all groups, chargers, sessions, and states
    * - ``SetChargePriority``
      - ``charger_id, alias, connector_id, priority``
-     - Update the priority of a session on a connector. 
+     - Update the priority of a session on a connector 
    * - ``SetBalanzState``
      - ``group_id, suspend`` (True or False)
      - Suspend or resume balanz() for an allocation group
    * - ``GetGroups``
      - (None)
-     - Returns full group structure.
+     - Returns full group structure
+   * - ``ReloadGroups``
+     - (None)
+     - Rereads groups from CSV file
+   * - ``WriteGroups``
+     - (None)
+     - Write groups to CSV file
+   * - ``UpdateGroup``
+     - ``group_id, description, max_allocation``
+     - Update existing group. Updates specified field(s)
    * - ``GetChargers``
      - ``group_id, charger_id``
      - Returns charger(s) matching filter
@@ -65,7 +74,7 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - Write chargers from CSV file
    * - ``UpdateCharger``
      - ``charger_id, alias, priority, description, conn_max``
-     - Update existing charger. Updates specified field(s). 
+     - Update existing charger. Updates specified field(s)
    * - ``GetTags``
      - (None)
      - Returns all known tags
