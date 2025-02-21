@@ -1498,7 +1498,7 @@ class Tag:
         self.user_name = user_name
         self.parent_id_tag = parent_id_tag
         self.description = description
-        self.status = status
+        self.status = TagStatusType.activated if status == "Activated" else TagStatusType.blocked
         self.priority = priority
         Tag.tag_list[self.id_tag] = self
         logger.debug(f"Created tag {self.id_tag} for user {user_name}. Status is {status}")
@@ -1519,7 +1519,7 @@ class Tag:
         if description:
             self.description = description
         if status:
-            self.status = TagStatusType.activated if status == "activated" else "blocked"
+            self.status = TagStatusType.activated if status == "Activated" else TagStatusType.blocked
         if priority:
             self.priority = priority
 

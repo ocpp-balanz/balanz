@@ -86,10 +86,10 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - Write tags to CSV file
    * - ``UpdateTag``
      - ``id_tag, user_name, parent_id_tag, description, status, priority``
-     - Update existing tag. Updates specified field(s). status can be ``activated`` or ``blocked``
+     - Update existing tag. Updates specified field(s). status can be ``Activated`` or ``Blocked``
    * - ``CreateTag``
      - ``id_tag, user_name, parent_id_tag, description, status, priority``
-     - Create new tag. status can be ``activated`` or ``blocked``
+     - Create new tag. status can be ``Activated`` or ``Blocked``
    * - ``DeleteTag``
      - ``id_tag``
      - Delete a tag
