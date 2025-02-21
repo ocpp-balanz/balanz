@@ -156,10 +156,7 @@ async def api_handler(websocket):
                             {"status": "NoSuchGroup"},
                         ]
                     else:
-                        Group.group_list[group_id].update(
-                            description=description,
-                            max_allocation=max_allocation
-                        )
+                        Group.group_list[group_id].update(description=description, max_allocation=max_allocation)
                         result = [
                             MessageType.CallResult,
                             message_id,
@@ -213,10 +210,7 @@ async def api_handler(websocket):
                         ]
                     else:
                         Charger.charger_list[charger_id].update(
-                            alias=alias,
-                            priority=priority,
-                            description=description,
-                            conn_max=conn_max
+                            alias=alias, priority=priority, description=description, conn_max=conn_max
                         )
                         result = [
                             MessageType.CallResult,

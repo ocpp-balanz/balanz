@@ -494,11 +494,7 @@ class Charger:
         Charger.charger_list[charger_id] = self
         logger.debug(f"Created charger {charger_id} with alias {alias} in group {group_id}")
 
-    def update(self,
-        alias: str = None,
-        priority: int = None,
-        description: str = None,
-        conn_max: int = None) -> None:
+    def update(self, alias: str = None, priority: int = None, description: str = None, conn_max: int = None) -> None:
         """Update specified field on existing charger"""
         if alias:
             self.alias = alias
@@ -935,9 +931,7 @@ class Group:
         Group.group_list[group_id] = self
         logger.debug(f"Created group {group_id}")
 
-    def update(self,
-        description: str = None,
-        max_allocation: str = None) -> None:
+    def update(self, description: str = None, max_allocation: str = None) -> None:
         """Update specified field on existing group"""
         if description:
             self.description = description
@@ -1004,21 +998,9 @@ class Group:
         logger.info(f"Writing groups to {file}")
         with open(file, mode="w", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow(
-                [
-                    "group_id",
-                    "description",
-                    "max_allocation"
-                ]
-            )
+            writer.writerow(["group_id", "description", "max_allocation"])
             for g in Group.group_list.values():
-                writer.writerow(
-                    [
-                        g.group_id,
-                        g.description,
-                        _sb(g._max_allocation)
-                    ]
-                )      
+                writer.writerow([g.group_id, g.description, _sb(g._max_allocation)])
 
     @staticmethod
     def allocation_groups() -> list[Group]:
@@ -1357,7 +1339,7 @@ class Group:
                 # It will fit, let's do it
                 conn._bz_allocation = config.getfloat("balanz", "min_allocation")
                 remain_allocation -= config.getfloat("balanz", "min_allocation")
-                logger.debug(f'Allocating minimum allocation to {conn.id_str()}. Remaining now: {remain_allocation}')
+                logger.debug(f"Allocating minimum allocation to {conn.id_str()}. Remaining now: {remain_allocation}")
                 conn._bz_done = True
 
         ############
