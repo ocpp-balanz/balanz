@@ -85,8 +85,14 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - (None)
      - Write tags to CSV file
    * - ``UpdateTag``
-     - ``id_tag, user_name, description, status, priority``
+     - ``id_tag, user_name, parent_id_tag, description, status, priority``
      - Update existing tag. Updates specified field(s). status can be ``activated`` or ``blocked``
+   * - ``CreateTag``
+     - ``id_tag, user_name, parent_id_tag, description, status, priority``
+     - Create new tag. status can be ``activated`` or ``blocked``
+   * - ``DeleteTag``
+     - ``id_tag``
+     - Delete a tag
    * - ``GetSessions``
      - ``charger_id, group_id``
      - Returns all historic sessions matching filter

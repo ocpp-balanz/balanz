@@ -830,6 +830,7 @@ class Charger:
             # If status is SuspendedEV, then clearly usage in transaction will be zero
             if connector.transaction and status == ChargePointStatus.suspended_ev:
                 connector.transaction.update_recent_usage(0.0, time.time())
+                connector.transaction.usage_meter = 0.0
 
         # If new status is clearly out of transaction, assume charging profile logic is correct
         # and so nothing is offered
@@ -1078,7 +1079,7 @@ class Group:
         """Sum of offered from all chargers in the group"""
         return sum(charger.offered() for charger in self.all_chargers())
 
-    def balanz(self) -> tuple[list[ChargeChange], list[ChargeChange]]:
+    def     balanz(self) -> tuple[list[ChargeChange], list[ChargeChange]]:
         """balanz logic.
 
         This function should be called regularly on allocation groups to determine what - if any -
@@ -1298,11 +1299,12 @@ class Group:
             if conn.status == ChargePointStatus.suspended_ev:
                 conn._bz_max = 0.0
             else:
-                if conn.offered == 0:
+                if conn.offered == 0 or conn.transaction is None:
+                    logger.debug(f"Setting max offer to min_allocation for {conn.id_str()}.")
                     conn._bz_max = config.getfloat("balanz", "min_allocation")
                 else:
                     # Can only increase every X interval
-                    if conn.transaction is None or time.time() - conn.transaction._bz_last_offer_time < config.getint(
+                    if time.time() - conn.transaction._bz_last_offer_time < config.getint(
                         "balanz", "min_offer_increase_interval"
                     ):
                         # Cannot increase yet.
@@ -1314,6 +1316,7 @@ class Group:
                             "balanz", "margin_increase"
                         ):
                             conn._bz_max = conn.offered + config.getfloat("balanz", "max_offer_increase")
+                            logger.debug(f"Increasing max offer to {conn._bz_max} for {conn.id_str()}.")
                         else:
                             conn._bz_max = conn.offered
                             logger.debug(
@@ -1321,7 +1324,7 @@ class Group:
                             )
 
                     # Is there is an (EV related) max detected?
-                    if conn.transaction and conn.transaction._bz_ev_max_usage is not None:
+                    if conn.transaction._bz_ev_max_usage is not None:
                         conn._bz_max = min(conn._bz_max, conn.transaction._bz_ev_max_usage)
                         logger.debug(
                             f"Restricting {conn.id_str()} to {conn.transaction._bz_ev_max_usage} due to history"
@@ -1339,12 +1342,13 @@ class Group:
         for conn in [
             c
             for c in connectors
-            if not c._bz_done and not conn.transaction and conn.status == ChargePointStatus.suspended_evse
+            if not c._bz_done and conn.transaction is None and conn.status == ChargePointStatus.suspended_evse
         ]:
             if remain_allocation >= config.getfloat("balanz", "min_allocation"):
                 # It will fit, let's do it
                 conn._bz_allocation = config.getfloat("balanz", "min_allocation")
                 remain_allocation -= config.getfloat("balanz", "min_allocation")
+                logger.debug(f'Allocating minimum allocation to {conn.id_str()}. Remaining now: {remain_allocation}')
                 conn._bz_done = True
 
         ############

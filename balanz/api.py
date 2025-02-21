@@ -245,6 +245,8 @@ async def api_handler(websocket):
                     description = payload.get("description", None)
                     status = payload.get("status", None)
                     priority = payload.get("priority", None)
+                    if id_tag is not None:
+                        id_tag = id_tag.upper()
                     if id_tag is None:
                         result = [
                             MessageType.CallError,
@@ -265,6 +267,64 @@ async def api_handler(websocket):
                             status=status,
                             priority=priority,
                         )
+                        result = [
+                            MessageType.CallResult,
+                            message_id,
+                            {"status": "Accepted"},
+                        ]
+                elif not result and command == "CreateTag":
+                    id_tag = payload.get("id_tag", None)
+                    user_name = payload.get("user_name", None)
+                    parent_id_tag = payload.get("parent_id_tag", None)
+                    description = payload.get("description", None)
+                    status = payload.get("status", None)
+                    priority = payload.get("priority", None)
+                    if id_tag is not None:
+                        id_tag = id_tag.upper()
+                    if id_tag is None:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "IllegalArguments"},
+                        ]
+                    elif id_tag in Tag.tag_list:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "TagExists"},
+                        ]
+                    else:
+                        Tag(
+                            id_tag=id_tag,
+                            user_name=user_name,
+                            parent_id_tag=parent_id_tag,
+                            description=description,
+                            status=status,
+                            priority=priority,
+                        )
+                        result = [
+                            MessageType.CallResult,
+                            message_id,
+                            {"status": "Accepted"},
+                        ]
+                elif not result and command == "DeleteTag":
+                    id_tag = payload.get("id_tag", None)
+                    if id_tag is not None:
+                        id_tag = id_tag.upper()
+                    if id_tag is None:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "IllegalArguments"},
+                        ]
+                    elif id_tag not in Tag.tag_list:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "NoSuchTag"},
+                        ]
+                    else:
+                        del Tag.tag_list[id_tag]
                         result = [
                             MessageType.CallResult,
                             message_id,

@@ -7,7 +7,7 @@ import pytest
 from utils import TEST_TOKEN, BalanzConnection, SimConnection, check, check_chargers, set_pass_tests
 
 # Uncomment below to enable test passing and automatic assert statement creation.
-# set_pass_tests(True)
+set_pass_tests(True)
 
 
 @pytest.mark.asyncio(loop_scope="module")
