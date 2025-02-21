@@ -56,7 +56,8 @@ def draw_charger(charger: Charger, historic: bool = False, prefix: str = "") -> 
             s for s in Session.session_list.values() if s.charger_id == charger.charger_id and s.end_time is not None
         ]
         completed_sessions.sort(key=lambda x: x.start_time, reverse=True)
-        for session in completed_sessions:
+        # Put only last 2 sessions, otherwise too messy..
+        for session in completed_sessions[:2]:
             s += (
                 f"{prefix}      |-DONE: {session.session_id}, id_tag {session.id_tag} ({session.user_name}),"
                 f" start: {time_str(session.start_time)}, end: {time_str(session.end_time)}, "
