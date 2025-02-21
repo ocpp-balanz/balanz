@@ -115,7 +115,8 @@ async def api_handler(websocket):
                     # TODO: Add more
                     result = [MessageType.CallResult, message_id, {"version": config.get("balanz", "version")}]
                 elif not result and command == "DrawAll":
-                    drawing = drawmodel.draw_all(historic=True)
+                    historic = payload.get("historic", True)
+                    drawing = drawmodel.draw_all(historic=historic)
                     result = [MessageType.CallResult, message_id, {"drawing": drawing}]
                 elif not result and command == "GetGroups":
                     charger_details = payload.get("charger_details", False)

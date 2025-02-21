@@ -35,6 +35,7 @@
     <button id="connect" onclick="connect()">(Re)connect</button>
     <button id="refresh" onclick="refresh()">Refresh</button>
     <button id="auto_refresh" onclick="auto_refresh()">Auto Refresh (15s)</button>
+    <input type="checkbox" id="historic" name="historic" value=true checked> <label for="historic"> Including last 5 sessions</label><br>
   </div>
   
   <textarea class="text" rows="40" id="model"></textarea>
@@ -51,7 +52,7 @@
     }
 
     function refresh() {
-      refresh_command = [2, gen_message_id(), "DrawAll", ""]
+      refresh_command = [2, gen_message_id(), "DrawAll", {historic: document.getElementById("historic").checked}]
       ws.send(JSON.stringify(refresh_command));
     }
 

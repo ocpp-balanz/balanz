@@ -43,8 +43,8 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - (None)
      - Returns balanz version and various status information.
    * - ``DrawAll``
-     - (None)
-     - Returns drawing of all groups, chargers, sessions, and states
+     - ``historic`` (default True)
+     - Returns drawing of all groups, chargers, sessions, and states. Optionally omit charging history
    * - ``SetChargePriority``
      - ``charger_id, alias, connector_id, priority``
      - Update the priority of a session on a connector 
