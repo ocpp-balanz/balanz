@@ -935,6 +935,15 @@ class Group:
         Group.group_list[group_id] = self
         logger.debug(f"Created group {group_id}")
 
+    def update(self,
+        description: str = None,
+        max_allocation: str = None) -> None:
+        """Update specified field on existing group"""
+        if description:
+            self.description = description
+        if max_allocation:
+            self._max_allocation = max_allocation
+
     def external(self, charger_details: bool = False) -> str:
         fields = ["group_id", "description"]
         result = {k: self.__dict__[k] for k in fields}
@@ -1079,7 +1088,7 @@ class Group:
         """Sum of offered from all chargers in the group"""
         return sum(charger.offered() for charger in self.all_chargers())
 
-    def     balanz(self) -> tuple[list[ChargeChange], list[ChargeChange]]:
+    def balanz(self) -> tuple[list[ChargeChange], list[ChargeChange]]:
         """balanz logic.
 
         This function should be called regularly on allocation groups to determine what - if any -
