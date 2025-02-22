@@ -304,7 +304,7 @@ async def balanz_loop(group: Group):
                         logger.debug(
                             f"Ok TxProfile/reset blocking default profile for {trans.charger_id}/{trans.connector_id}."
                         )
-                trans._bz_blocking_profile_reset = True  # TODO: This can be dangerous, should it be break?
+                trans.connector._bz_blocking_profile_reset = True  # TODO: This can be dangerous, should it be break?
 
             # Actual rebalancing. First reduce, wait a little (configurable), then grow
             reduce_list, grow_list = group.balanz()
@@ -342,15 +342,17 @@ async def balanz_loop(group: Group):
                         if result.status != ChargingProfileStatus.accepted:
                             logger.warning(
                                 f"Failed to set blocking default profile to do {change}"
-                                f" Result: {result.status}"
+                                f" Result: {result.status}. Aborting further changes"
                             )
+                            break
                     else:
                         result = await charger.ocpp_ref.clear_blocking_default_profile(change.connector_id)
                         if result.status != ClearChargingProfileStatus.accepted:
                             logger.warning(
                                 f"Failed to implement balanz change {change} by deleting blocking profile."
-                                f" Result: {result.status}."
+                                f" Result: {result.status}. Aborting further changes"
                             )
+                            break
                 else:
                     # Normal case, change is done by updating TxProfile
                     result = await charger.ocpp_ref.set_tx_profile(

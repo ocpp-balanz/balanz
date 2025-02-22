@@ -297,6 +297,7 @@ class Transaction:
         self.transaction_id = transaction_id
         self.charger_id = charger_id
         self.connector_id = connector.connector_id
+        self.connector: Connector = connector
         self.id_tag = id_tag
         self.start_time = start_time
         self.meter_start = meter_start  # Wh (Watt hours)
@@ -317,20 +318,10 @@ class Transaction:
         else:
             self.priority: int = None
 
-        # Balanz helper fields
-        self._bz_ev_max_usage: float = None  # Do not exceed this value when charging for the rest of the transaction
-        self._bz_suspend_until: float = (
-            None  # Suspend offering until this time (used to retry for e.g. delayed charging)
-        )
-        self._bz_blocking_profile_reset: bool = (
-            False  # Flag to indicate if the blocking profile has been reset. Should be done with first TxProfile change
-        )
-        # Last time an offer (which will be always @/above the minimum was made).
-        # It is implicit at start (otherwise Transaction would not have started)
-        self._bz_last_offer_time: float = time.time()
-        self._bz_recent_usages: deque[(float, float)] = (
-            deque()
-        )  # Queue of (usage, time) pairs to calculate recent usage (used for balancing)
+        # Reset balanz helper fields
+        self.connector._bz_reset()
+        self.connector._bz_last_offer_time = time.time()
+        self.connector._bz_blocking_profile_reset = False
 
         logger.info(
             f"Created transaction {transaction_id} for connector {charger_id}/{self.connector_id} by tag {id_tag}"
@@ -348,29 +339,6 @@ class Transaction:
 
     def id_str(self) -> str:
         return f"{self.charger_id}/{self.connector_id}:{self.transaction_id}"
-
-    def expire_recent_usage(self) -> None:
-        """Expire recent usage older than configured interval minutes."""
-        now = time.time()
-        self._bz_recent_usages = deque(
-            filter(
-                lambda x: now - x[1] < config.getint("balanz", "usage_monitoring_interval"),
-                self._bz_recent_usages,
-            )
-        )
-
-    def update_recent_usage(self, usage: float, timestamp: float) -> None:
-        """Update the usage of this transaction."""
-        self._bz_recent_usages.append((usage, timestamp))
-        self.expire_recent_usage()
-
-    def get_max_recent_usage(self) -> float:
-        """Get the maximum recent usage."""
-        self.expire_recent_usage()
-        if not self._bz_recent_usages:
-            return 0.0
-        max_usage, _ = max(self._bz_recent_usages)
-        return max_usage
 
 
 class Connector:
@@ -399,6 +367,29 @@ class Connector:
         self._bz_to_review: bool = False
         self._bz_max: float
 
+        # Balanz helper fields (will be reset upon transaction start)
+        self._bz_ev_max_usage: float = None  # Do not exceed this value when charging for the rest of the transaction
+        self._bz_suspend_until: float = (
+            None  # Suspend offering until this time (used to retry for e.g. delayed charging)
+        )
+        self._bz_blocking_profile_reset: bool = (
+            True  # Flag to indicate if the blocking profile has been reset. Should be done with first TxProfile change
+        )
+        # Last time an offer (which will be always @/above the minimum was made).
+        # It is implicit at start (otherwise Transaction would not have started)
+        self._bz_last_offer_time: float = None
+        self._bz_recent_usages: deque[(float, float)] = (
+            deque()
+        )  # Queue of (usage, time) pairs to calculate recent usage (used for balancing)
+
+    def _bz_reset(self) -> None:
+        """Reset various bz fields"""
+        self._bz_ev_max_usage = None
+        self._bz_suspend_until: None
+        self._bz_blocking_profile_reset = True
+        self._bz_last_offer_time = None
+        self._bz_recent_usages.clear()
+
     def external(self) -> str:
         fields = ["transaction_id", "offered"]
         result = {k: self.__dict__[k] for k in fields}
@@ -407,6 +398,28 @@ class Connector:
         if self.transaction:
             result["transaction"] = self.transaction.external()
         return result
+
+    def update_recent_usage(self, usage: float, timestamp: float) -> None:
+        """Update the usage of this transaction."""
+        self._bz_recent_usages.append((usage, timestamp))
+        self.expire_recent_usage()
+
+    def expire_recent_usage(self) -> None:
+        """Expire recent usage older than configured interval minutes."""
+        now = time.time()
+        self._bz_recent_usages = deque(
+            filter(
+                lambda x: now - x[1] < config.getint("balanz", "usage_monitoring_interval"),
+                self._bz_recent_usages,
+            )
+        )
+    def get_max_recent_usage(self) -> float:
+        """Get the maximum recent usage."""
+        self.expire_recent_usage()
+        if not self._bz_recent_usages:
+            return 0.0
+        max_usage, _ = max(self._bz_recent_usages)
+        return max_usage
 
     def __str__(self) -> str:
         return str(vars(self))
@@ -638,14 +651,14 @@ class Charger:
         """Report back that a requested ChargeChange has been done, allowing the fields to be updated in the model."""
         connector: Connector = Charger.charger_list[charge_change.charger_id].connectors[charge_change.connector_id]
         connector.offered = charge_change.allocation
-        if connector.transaction and charge_change.allocation >= config.getfloat("balanz", "min_allocation"):
+        if charge_change.allocation >= config.getfloat("balanz", "min_allocation"):
             # Update to reflect a new allocation.
-            connector.transaction._bz_last_offer_time = time.time()  # Update last offer time to now
-            connector.transaction._bz_recent_usages.clear()  # Reset monitoring
-            connector.transaction._bz_suspend_until = None
+            connector._bz_last_offer_time = time.time()  # Update last offer time to now
+            connector._bz_recent_usages.clear()  # Reset monitoring
+            connector._bz_suspend_until = None
 
         # Charging history
-        if connector.transaction:
+        if connector.transaction is not None:
             connector.transaction.charging_history.append(
                 ChargingHistory(timestamp=time.time(), offered=connector.offered)
             )
@@ -820,13 +833,14 @@ class Charger:
             # balanz() related logic
 
             # Flag a potential start charging case for balanz to review
-            if not connector.transaction and status == ChargePointStatus.suspended_evse:
+            if connector.transaction is None and status == ChargePointStatus.suspended_evse:
                 connector._bz_to_review = True
 
             # If status is SuspendedEV, then clearly usage in transaction will be zero
-            if connector.transaction and status == ChargePointStatus.suspended_ev:
-                connector.transaction.update_recent_usage(0.0, time.time())
-                connector.transaction.usage_meter = 0.0
+            if status == ChargePointStatus.suspended_ev:
+                connector.update_recent_usage(0.0, time.time())
+                if connector.transaction is not None:
+                    connector.transaction.usage_meter = 0.0
 
         # If new status is clearly out of transaction, assume charging profile logic is correct
         # and so nothing is offered
@@ -894,9 +908,8 @@ class Charger:
                 )
                 connector.offered = offered
 
-        # If in transaction, review usage_meter for new max
-        if connector.transaction:
-            connector.transaction.update_recent_usage(usage=usage_meter, timestamp=timestamp)
+        # If in review usage_meter for new max
+        connector.update_recent_usage(usage=usage_meter, timestamp=timestamp)
 
 
 class Group:
@@ -1040,7 +1053,7 @@ class Group:
             conn.transaction
             for c in chargers
             for conn in c.connectors.values()
-            if conn.transaction and not conn.transaction._bz_blocking_profile_reset
+            if conn.transaction is not None and not conn._bz_blocking_profile_reset
         ]
         return transactions_reset_blocking
 
@@ -1206,11 +1219,10 @@ class Group:
         for conn in [c for c in connectors if not c._bz_done]:
             # SuspendedEV case - suspend part
             if (
-                conn.transaction
-                and conn.status == ChargePointStatus.suspended_ev
-                and conn.transaction.get_max_recent_usage() < config.getfloat("balanz", "usage_threshold")
+                conn.status == ChargePointStatus.suspended_ev and
+                conn.get_max_recent_usage() < config.getfloat("balanz", "usage_threshold")
             ):
-                if time.time() - conn.transaction._bz_last_offer_time > config.getint(
+                if time.time() - conn._bz_last_offer_time > config.getint(
                     "balanz", "suspended_allocation_timeout"
                 ):
                     # Remove allocation and set suspend time.
@@ -1218,70 +1230,69 @@ class Group:
                     conn._bz_done = True
 
                     # Is this initial delayed charging?
-                    if conn.transaction.energy_meter >= config.getint("balanz", "energy_threshold"):
+                    if conn.transaction is not None and conn.transaction.energy_meter >= config.getint("balanz", "energy_threshold"):
                         # No!
-                        conn.transaction._bz_suspend_until = time.time() + config.getint(
+                        conn._bz_suspend_until = time.time() + config.getint(
                             "balanz", "suspended_delayed_time_not_first"
                         )
                     else:
                         # Yes!
                         if config.getboolean("balanz", "suspend_top_of_hour"):
                             # Adjust to next top of hour and make offer around that time.
-                            conn.transaction._bz_suspend_until = adjust_time_top_of_hour(
+                            conn._bz_suspend_until = adjust_time_top_of_hour(
                                 time.time(),
                                 config.getint("balanz", "suspended_allocation_timeout"),
                             )
                         else:
-                            conn.transaction._bz_suspend_until = time.time() + config.getint(
+                            conn._bz_suspend_until = time.time() + config.getint(
                                 "balanz", "suspended_delayed_time"
                             )
                     logger.debug(
                         f"balanz: EV suspended. No allocation for {conn.id_str()}. Suspend until "
-                        f"{time_str(conn.transaction._bz_suspend_until)}"
+                        f"{time_str(conn._bz_suspend_until)}"
                     )
                 else:
                     logger.debug(f"keeping allocation for suspended EV for now. {conn.id_str()}")
                     conn._bz_done = True
             # SuspendedEVSE / stay suspended case
             elif (
-                conn.transaction
-                and conn.status == ChargePointStatus.suspended_evse
-                and conn.transaction._bz_suspend_until
-                and time.time() < conn.transaction._bz_suspend_until
+                conn.status == ChargePointStatus.suspended_evse
+                and conn._bz_suspend_until is not None
+                and time.time() < conn._bz_suspend_until
             ):
                 conn._bz_allocation = 0
                 conn._bz_done = True
-                logger.debug(f"Connector will stay suspended, not yet {time_str(conn.transaction._bz_suspend_until)}")
+                logger.debug(f"Connector will stay suspended, not yet {time_str(conn._bz_suspend_until)}")
             # Reduce offer case - can an specific limit be determined (EV, end-of-charging ...).
             # Putting quite a few criteria to not be too aggresive on this point.
             elif (
                 conn.status == ChargePointStatus.charging
                 and conn.transaction
                 and conn.transaction.usage_meter is not None
-                and time.time() - conn.transaction._bz_last_offer_time
+                and time.time() - conn._bz_last_offer_time
                 > config.getint("balanz", "usage_monitoring_interval")
-                and conn.transaction.get_max_recent_usage() >= config.getfloat("balanz", "min_allocation")
+                and conn.get_max_recent_usage() >= config.getfloat("balanz", "min_allocation")
                 and conn.offered
-                and conn.transaction.get_max_recent_usage() <= conn.offered - config.getfloat("balanz", "margin_lower")
+                and conn.get_max_recent_usage() <= conn.offered - config.getfloat("balanz", "margin_lower")
                 and conn.offered >= config.getfloat("balanz", "min_allocation")
                 and not (
-                    conn.transaction._bz_ev_max_usage is not None
-                    and ceil(conn.transaction.usage_meter) > conn.transaction._bz_ev_max_usage
+                    conn._bz_ev_max_usage is not None
+                    and ceil(conn.transaction.usage_meter) > conn._bz_ev_max_usage
                 )
             ):
                 # Not using full offer (which is above the minimum), so can be reduced.
                 # Will be in effect for the rest of the transaction
-                conn._bz_allocation = ceil(conn.transaction.get_max_recent_usage())
+                conn._bz_allocation = ceil(conn.get_max_recent_usage())
                 if conn._bz_allocation < config.getfloat("balanz", "min_allocation"):
                     # Do not to go below the minimum
-                    conn.transaction._bz_allocation = config.getfloat("balanz", "min_allocation")
+                    conn._bz_allocation = config.getfloat("balanz", "min_allocation")
                 conn._bz_done = True
 
                 # Don't go above this for remainder of session
-                conn.transaction._bz_ev_max_usage = conn._bz_allocation
+                conn._bz_ev_max_usage = conn._bz_allocation
                 logger.info(
                     f"balanz: Due to EV lower usage, reducing alloc from {conn.offered} to {conn._bz_allocation}"
-                    f" for {conn.transaction.id_str()}"
+                    f" for {conn.id_str()}"
                 )
 
         ############
@@ -1295,15 +1306,15 @@ class Group:
                     conn._bz_max = config.getfloat("balanz", "min_allocation")
                 else:
                     # Can only increase every X interval
-                    if time.time() - conn.transaction._bz_last_offer_time < config.getint(
+                    if time.time() - conn._bz_last_offer_time < config.getint(
                         "balanz", "min_offer_increase_interval"
                     ):
                         # Cannot increase yet.
                         conn._bz_max = conn.offered
-                        logger.debug(f"Not yet ready to increase offer for {conn.id_str()}.")
+                        logger.debug(f"Not yet ready to increase offer for {conn.id_str()}. last {time_str(conn._bz_last_offer_time)}")
                     else:
                         # ... and only if usage has proven to be close to what is offered
-                        if conn.offered - conn.transaction.get_max_recent_usage() < config.getfloat(
+                        if conn.offered - conn.get_max_recent_usage() < config.getfloat(
                             "balanz", "margin_increase"
                         ):
                             conn._bz_max = conn.offered + config.getfloat("balanz", "max_offer_increase")
@@ -1311,14 +1322,14 @@ class Group:
                         else:
                             conn._bz_max = conn.offered
                             logger.debug(
-                                f"Recent usage for {conn.id_str()} is {conn.transaction.get_max_recent_usage()} vs offer {conn.offered}. Too low to increase"
+                                f"Recent usage for {conn.id_str()} is {conn.get_max_recent_usage()} vs offer {conn.offered}. Too low to increase"
                             )
 
                     # Is there is an (EV related) max detected?
-                    if conn.transaction._bz_ev_max_usage is not None:
-                        conn._bz_max = min(conn._bz_max, conn.transaction._bz_ev_max_usage)
+                    if conn._bz_ev_max_usage is not None:
+                        conn._bz_max = min(conn._bz_max, conn._bz_ev_max_usage)
                         logger.debug(
-                            f"Restricting {conn.id_str()} to {conn.transaction._bz_ev_max_usage} due to history"
+                            f"Restricting {conn.id_str()} to {conn._bz_ev_max_usage} due to history"
                         )
 
                     # But never more than the maximum configured for the connection
@@ -1334,6 +1345,7 @@ class Group:
             c
             for c in connectors
             if not c._bz_done and conn.transaction is None and conn.status == ChargePointStatus.suspended_evse
+            and (conn._bz_suspend_until is None or time.time() >= conn._bz_suspend_until)
         ]:
             if remain_allocation >= config.getfloat("balanz", "min_allocation"):
                 # It will fit, let's do it
@@ -1453,9 +1465,10 @@ class Group:
                 transaction_id=transaction_id,
                 allocation=conn._bz_allocation,
             )
+
             if conn._bz_allocation > conn.offered:
                 grow.append(change)
-            elif conn.transaction and conn._bz_allocation < conn.offered:
+            elif conn._bz_allocation < conn.offered:
                 reduce.append(change)
             # Note the == case is silently dropped
         return reduce, grow

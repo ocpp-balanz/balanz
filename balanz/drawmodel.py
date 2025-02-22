@@ -28,10 +28,10 @@ def draw_connector(connector: Connector, prefix: str = "", historic: bool = Fals
             f"start: {time_str(connector.transaction.start_time)}, energy: {connector.transaction.energy_meter} Wh, "
             f"last_usage: {time_str(connector.transaction.last_usage_time)}"
         )
-        if connector.transaction._bz_ev_max_usage is not None:
-            s += f", max_ev: {connector.transaction._bz_ev_max_usage}"
-        if connector.transaction._bz_suspend_until is not None:
-            s += f", suspend_until: {time_str(connector.transaction._bz_suspend_until)}"
+        if connector._bz_ev_max_usage is not None:
+            s += f", max_ev: {connector._bz_ev_max_usage}"
+    if connector._bz_suspend_until is not None:
+        s += f", suspend_until: {time_str(connector._bz_suspend_until)}"
     s += "\n"
     if connector.transaction and historic:
         s += draw_charge_history(charging_history=connector.transaction.charging_history, prefix=prefix)
