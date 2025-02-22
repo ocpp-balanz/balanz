@@ -51,13 +51,5 @@ TACW224137G670 | RR2-02        | 1236
 TACW224537G682 | RR2-03        | 1237
 TACW223437G682 | RR2-04        | 1238
 
-The group definitions are:
+The group definitions are as per definition in `data/model`.
 
-```text
-group_id,parent_id,description,priority,max_allocation
-ACME,,All ACME Sites,,
-RR2,ACME,Road Runner 2 Site,,00:00-23:59>0=24:3=40:5=48
-RR2-LOW,RR2,Road Runner 2 Site low priority,1,
-RR2-HIGH,RR2,Road Runner 2 Site low priority,3,
-Default,,Default Group for autoregistered chargers,,
-```
