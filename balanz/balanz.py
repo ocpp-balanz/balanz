@@ -332,13 +332,25 @@ async def balanz_loop(group: Group):
 
                 if change.transaction_id is None:
                     # Special case when transaction_id is not yet known.
-                    # In this case, we will get charging going by removing the blocking profile.
-                    result = await charger.ocpp_ref.clear_blocking_default_profile(change.connector_id)
-                    if result.status != ClearChargingProfileStatus.accepted:
-                        logger.warning(
-                            f"Failed to implement balanz change {change} by deleting blocking profile."
-                            f" Result: {result.status}. Trying to set transaction id to 1.."
-                        )
+
+                    # This will normally be the "starting case" which will be addressed by removing the blocking profile.
+                    # However, if that was attempted and did not result in a transaction starting, it may be necessary
+                    # to reinstate the blocking profile...
+                    # Which situation is it?
+                    if change.allocation == 0:
+                        result = await charger.ocpp_ref.set_blocking_default_profile(change.connector_id)
+                        if result.status != ChargingProfileStatus.accepted:
+                            logger.warning(
+                                f"Failed to set blocking default profile to do {change}"
+                                f" Result: {result.status}"
+                            )
+                    else:
+                        result = await charger.ocpp_ref.clear_blocking_default_profile(change.connector_id)
+                        if result.status != ClearChargingProfileStatus.accepted:
+                            logger.warning(
+                                f"Failed to implement balanz change {change} by deleting blocking profile."
+                                f" Result: {result.status}."
+                            )
                 else:
                     # Normal case, change is done by updating TxProfile
                     result = await charger.ocpp_ref.set_tx_profile(
