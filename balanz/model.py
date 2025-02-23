@@ -373,7 +373,8 @@ class Connector:
             None  # Suspend offering until this time (used to retry for e.g. delayed charging)
         )
         self._bz_blocking_profile_reset: bool = (
-            True  # Flag to indicate if the blocking profile has been reset. Should be done with first TxProfile change
+            True  # Flag to indicate if the blocking profile has been reset. Should be done with first TxProfile change,
+                  # OR if entering a non-transaction state
         )
         # Last time an offer (which will be always @/above the minimum was made).
         # It is implicit at start (otherwise Transaction would not have started)
@@ -384,9 +385,9 @@ class Connector:
 
     def _bz_reset(self) -> None:
         """Reset various bz fields"""
+        logger.debug(f'Resetting connector fields for {self.id_str()}')
         self._bz_ev_max_usage = None
-        self._bz_suspend_until: None
-        self._bz_blocking_profile_reset = True
+        self._bz_suspend_until = None
         self._bz_last_offer_time = None
         self._bz_recent_usages.clear()
 
@@ -848,6 +849,7 @@ class Charger:
         # and so nothing is offered
         if not status_in_transaction(status):
             connector.offered = 0
+            connector._bz_reset()
 
     def meter_values(
         self,
@@ -909,6 +911,10 @@ class Charger:
                     f"expected {connector.offered}. Adjusting it."
                 )
                 connector.offered = offered
+                # Validate that timestamp for the offering is registered. This may not be the case if in
+                # a startup case. If so, set to now.
+                if connector._bz_last_offer_time is None:
+                    connector._bz_last_offer_time = time.time()
 
         # If in review usage_meter for new max
         connector.update_recent_usage(usage=usage_meter, timestamp=timestamp)
@@ -1044,20 +1050,31 @@ class Group:
         chargers_to_request = [c for c in chargers if not c.requested_status and c.ocpp_ref is not None]
         return chargers_to_request
 
+    def connectors_reset_blocking(self) -> list[Connector]:
+        """List of Connectors for which blocking profile has not been reset AND the connector has ended in a non-transactional state"""
+        chargers: list[Charger] = self.all_chargers()
+        reset_blocking = [
+            conn
+            for c in chargers
+            for conn in c.connectors.values()
+            if conn.transaction is None and not status_in_transaction(conn.status) and not conn._bz_blocking_profile_reset
+        ]
+        return reset_blocking
+
     def transactions_reset_blocking(self) -> list[Transaction]:
         """List of transactions for which the blocking profile has not yet been reset.
 
         To be called by balanz loop to ensure all the blocking profile is reset once transaction has
-        started.
+            started.
         """
         chargers: list[Charger] = self.all_chargers()
-        transactions_reset_blocking = [
+        reset_blocking = [
             conn.transaction
             for c in chargers
             for conn in c.connectors.values()
             if conn.transaction is not None and not conn._bz_blocking_profile_reset
         ]
-        return transactions_reset_blocking
+        return reset_blocking
 
     def connectors_balanz_review(self) -> list[Connector]:
         """Connectors for (urgent) review, typically after a tag has been scanned.
