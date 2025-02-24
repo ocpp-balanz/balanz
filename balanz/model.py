@@ -540,6 +540,7 @@ class Charger:
         ]
         result = {k: self.__dict__[k] for k in fields}
         result["connectors"] = {conn_id: self.connectors[conn_id].external() for conn_id in self.connectors.keys()}
+        result["network_connected"] = (self.ocpp_ref is not None)
         return result
 
     @staticmethod
