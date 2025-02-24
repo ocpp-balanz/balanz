@@ -39,7 +39,7 @@ async def test_case1():
     assert check(response, "Tag Accepted. Parent: , new status: SuspendedEVSE")
 
     # Wait a little, review that stays in SuspendedEV state, but that transaction has started.
-    await asyncio.sleep(30)  
+    await asyncio.sleep(30)
     response = await conn.command("status")
     assert check(
         response,
@@ -86,7 +86,7 @@ async def test_case2():
     assert check(response, "Tag Accepted. Parent: , new status: SuspendedEVSE")
 
     # Wait a little, review that stays in SuspendedEV state, but that transaction has started.
-    await asyncio.sleep(100)  
+    await asyncio.sleep(100)
     response = await conn.command("status")
     assert check(
         response,
@@ -148,7 +148,7 @@ async def test_case3():
     assert check(response, "Tag Accepted. Parent: , new status: SuspendedEVSE")
 
     # Wait a little, review that stays in SuspendedEV state, but that transaction has started.
-    await asyncio.sleep(130)  
+    await asyncio.sleep(130)
     response = await conn.command("status")
     assert check(
         response,
@@ -163,7 +163,7 @@ async def test_case3():
     )
 
     # Finish charging by unplugging the cable
-    await asyncio.sleep(10)  
+    await asyncio.sleep(10)
     response = await conn.command("unplug")
     assert check(response, "Ok, status change to available")
 
@@ -195,7 +195,7 @@ async def test_case4():
     response = await conn.command("tag")
 
     # Wait a little, review that stays in SuspendedEV state, but that transaction has started.
-    await asyncio.sleep(100)  
+    await asyncio.sleep(100)
     response = await conn.command("status")
     assert check(
         response,
@@ -229,16 +229,12 @@ async def test_case4():
     await conn.disconnect()
 
 
-
-
-
-
 def main():
     # Run test case outside of pytest
-#    asyncio.run(test_case1())
-#    asyncio.run(test_case2())
+    asyncio.run(test_case1())
+    asyncio.run(test_case2())
     asyncio.run(test_case3())
-#   asyncio.run(test_case4())
+    asyncio.run(test_case4())
 
 
 if __name__ == "__main__":

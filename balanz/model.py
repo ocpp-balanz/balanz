@@ -374,7 +374,7 @@ class Connector:
         )
         self._bz_blocking_profile_reset: bool = (
             True  # Flag to indicate if the blocking profile has been reset. Should be done with first TxProfile change,
-                  # OR if entering a non-transaction state
+            # OR if entering a non-transaction state
         )
         # Last time an offer (which will be always @/above the minimum was made).
         # It is implicit at start (otherwise Transaction would not have started)
@@ -385,7 +385,7 @@ class Connector:
 
     def _bz_reset(self) -> None:
         """Reset various bz fields"""
-        logger.debug(f'Resetting connector fields for {self.id_str()}')
+        logger.debug(f"Resetting connector fields for {self.id_str()}")
         self._bz_ev_max_usage = None
         self._bz_suspend_until = None
         self._bz_last_offer_time = None
@@ -1057,7 +1057,9 @@ class Group:
             conn
             for c in chargers
             for conn in c.connectors.values()
-            if conn.transaction is None and not status_in_transaction(conn.status) and not conn._bz_blocking_profile_reset
+            if conn.transaction is None
+            and not status_in_transaction(conn.status)
+            and not conn._bz_blocking_profile_reset
         ]
         return reset_blocking
 

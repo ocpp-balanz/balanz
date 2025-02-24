@@ -17,7 +17,7 @@ from api import api_handler
 from charge_point_csms_v16 import ChargePoint_CSMS_v16
 from charge_point_lc_v16 import ChargePoint_LC_v16
 from config import config
-from model import ChargeChange, Charger, Group, Session, Tag, Transaction, Connector
+from model import ChargeChange, Charger, Connector, Group, Session, Tag, Transaction
 from ocpp.v16.enums import ChargePointStatus, ChargingProfileStatus, ClearChargingProfileStatus, Reason
 from util import gen_sha_256, time_str
 from websockets.frames import CloseCode
@@ -274,17 +274,15 @@ async def balanz_loop(group: Group):
             # may be there anyways...
             reset_connectors: list[Connector] = group.connectors_reset_blocking()
             for conn in reset_connectors:
-                    result = await conn.charger.ocpp_ref.set_blocking_default_profile(connector_id=conn.connector_id)
-                    if result.status != ChargingProfileStatus.accepted:
-                        logger.warning(
-                            f"Failed to reset blocking default profile for {conn.id_str()}"
-                            f" Result: {result.status}"
-                        )
-                    else:
-                        logger.debug(
-                            f"Ok reset blocking default profile for {conn.id_str()}")
-                    # Note, doing this regardless of result. That is on purpose!
-                    conn._bz_blocking_profile_reset = True 
+                result = await conn.charger.ocpp_ref.set_blocking_default_profile(connector_id=conn.connector_id)
+                if result.status != ChargingProfileStatus.accepted:
+                    logger.warning(
+                        f"Failed to reset blocking default profile for {conn.id_str()}" f" Result: {result.status}"
+                    )
+                else:
+                    logger.debug(f"Ok reset blocking default profile for {conn.id_str()}")
+                # Note, doing this regardless of result. That is on purpose!
+                conn._bz_blocking_profile_reset = True
 
             # Next, check for any transactions that have started, but where the default blocking profiles needs
             # to be reinstated. For these, we first need to set a TxProfile to match the base profile, and then
