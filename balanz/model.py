@@ -396,6 +396,8 @@ class Connector:
         result = {k: self.__dict__[k] for k in fields}
         result["status"] = str(self.status)
         result["priority"] = self.conn_priority()
+        result["ev_max_usage"] = self._bz_ev_max_usage
+        result["suspend_until"] = self._bz_suspend_until
         if self.transaction:
             result["transaction"] = self.transaction.external()
         return result
