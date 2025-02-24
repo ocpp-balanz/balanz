@@ -1285,7 +1285,7 @@ class Group:
             ):
                 conn._bz_allocation = 0
                 conn._bz_done = True
-                logger.debug(f"Connector will stay suspended, not yet {time_str(conn._bz_suspend_until)}")
+                logger.debug(f"Connector {conn.id_str()} will stay suspended, not yet {time_str(conn._bz_suspend_until)}")
             # Reduce offer case - can an specific limit be determined (EV, end-of-charging ...).
             # Putting quite a few criteria to not be too aggresive on this point.
             elif (
