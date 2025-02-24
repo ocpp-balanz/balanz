@@ -1,9 +1,9 @@
 SmartCharging
 =============
 
-balanz focused on delivery Smart Charging by employing the balanz Smart Charging algorithm.  The algorithm is applied
-to groups of chargers belonging to the same :ref:`allocation group <model-group>` which defines the overall allowed total allocation across
-all chargers at a given point in time.
+balanz focuses on delivery Smart Charging by employing the balanz Smart Charging algorithm.  The algorithm is applied
+to groups of chargers belonging to the same :ref:`allocation group <model-group>` which define the overall allowed total
+allocation across all chargers at a given point in time.
 
 An allocation is also known as an offer, i.e. an offer to a charger that it *may* charge an attached EV with up to the
 allocated/offered amount. balanz makes offers in units of Ampere (A) assumed to be made available across all 3 charger 
@@ -16,7 +16,7 @@ balanz makes offers to Chargers using the following rules:
     - Offers are made in units of Ampere (A) and always in whole numbers.
     - Chargers without a connected EV or in a non-transactional state are not considered for offers, i.e. will have a Zero offer.
     - Offers are made according to priorities, coming from groups, tags, or possibly overwritten on a session basis.
-    - At any point in time, the total offers across an :ref:`allocation group <model-group>` will not exceed the maximum defined. Note,
+    - At any point in time, total offers across an :ref:`allocation group <model-group>` will not exceed the maximum defined. Note,
       that several maximum values may be set, both schedule- and priority dependent.
     - Offers are only made at or above a configured minimum defaulting to 6A. This is because some EVs will not charge below this level and
       may even enter an error state if offered less.
@@ -24,11 +24,12 @@ balanz makes offers to Chargers using the following rules:
     - Offers are considered unused if the maximum usage in the last period is less that a configured value (configurable, default 2A). 
       The period is configurable and defaults to 5 min.
     - Unused offers will be revoked after the configured period (default 5 min). The charger will be subject to receive an offer again after
-      a configurable suspension time (default 1 hour). This mechanism is design to cater for situation where EV does not want to charge, either
+      a configurable suspension time (default 1 hour). This mechanism is designed to cater for situation where EV does not want to charge, either
       because it is set-up for delayed charging, or because it is full and has not yet terminated the session (aka charging transaction).
-    - If the maximum usage in the last period is less than the offer by some margin (configurable, default 0.8A), the offer will be reduced
-      to the first whole number of A higher than the maxium. This limit is seen to be associated with the EV (e.g. cannot charge at a higher
-      rate than 16A) and so remains valid for the remainder of the session.
+    - If the maximum usage in the last period (default 5 min) is less than the offer by some margin (configurable, default 0.8A), the offer
+      will be reduced to the first whole number of A higher than the maxium usage seen. This limit is considered to be associated with the EV
+      (e.g. cannot charge at a higher rate than 16A, or charing rate slowing down towards end of charging cycle) and so remains valid for the
+      remainder of the session.
     - Initial offers are made under the same principle as unused offers described above.
     - Offers will increase at maximum (configurable, default 3A) in a step-wise fashon at the ealiest every defined period (configurable, 
       default 2 min). This ensure against too drastic fluxuations in the overall rebalancing process.
@@ -51,11 +52,13 @@ no (i.e. zero) allocation. This profile ensures that a charger cannot start usin
 When an EV charging sesison starts - typically as a result of scanning an RFID tag - the *blocking profile* will cause the charger to enter
 the ``SuspendedEVSE`` state. This state indicates that no offer can be made by the charger. balanz will then quickly (subject to availability
 and priority) make an offer to the charger by deleting the *blocking profile* (the one with a zero allocation) thus exposing the *minimum profile*.
-This allows a transaction to start with the minimum offer presented by the first profile (6A).
+This allows a transaction to start with the minimum offer presented by the first profile (6A). Note, that some EVs will not trigger a transaction
+start in this scenario, but will simply remain in the ``SuspendedEV`` state until it is ready to receive an offer. In that case, subsequent
+offers are also done using the mechanism described above.
 
-All subsequent changes to offers/allocations will be made by setting a ``TxProfile``. This has the advantage that such offer will automatically
-be invalidated once a transaction stops. The first time a `TxProfile` setting is done for a transaction, balanz will restore *blocking profile*
-in order to be ready for the next charging session.
+If a transaction is started, all subsequent changes to offers/allocations will be made by setting a ``TxProfile``. This has the advantage that
+such offer will automatically be invalidated once a transaction stops. The first time a `TxProfile` setting is done for a transaction, balanz
+will restore *blocking profile* in order to be ready for the next charging session.
 
 
 Delayed Charging
