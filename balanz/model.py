@@ -51,9 +51,6 @@ from util import (
 logger = logging.getLogger("model")
 
 
-# Constants
-MAX_PRIORITY = 1000
-
 
 # ---------------------------
 # Utility functions (local)
@@ -435,10 +432,6 @@ class Connector:
         return self.charger.conn_max
 
     def conn_priority(self) -> int:
-        # It is the absolutely highest priority to start a transaction
-        if not self.transaction and self.status == ChargePointStatus.suspended_evse:
-            return MAX_PRIORITY
-
         # Priority may have been overwritten at transaction level
         if self.transaction and self.transaction.priority is not None:
             return self.transaction.priority
