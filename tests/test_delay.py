@@ -232,9 +232,9 @@ async def test_case4():
 
 def main():
     # Run test case outside of pytest
-#    asyncio.run(test_case1())
-#    asyncio.run(test_case2())
-#    asyncio.run(test_case3())
+    asyncio.run(test_case1())
+    asyncio.run(test_case2())
+    asyncio.run(test_case3())
     asyncio.run(test_case4())
 
 
