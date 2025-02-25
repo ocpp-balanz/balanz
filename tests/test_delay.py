@@ -194,7 +194,7 @@ async def test_case4():
     # scan the default tag
     response = await conn.command("tag")
 
-    # Wait a little, review that stays in SuspendedEV state, but that transaction has started.
+    # Wait a little, review that stays in SuspendedEV state, but that offer has been made
     await asyncio.sleep(100)  
     response = await conn.command("status")
     assert check(
@@ -205,6 +205,7 @@ async def test_case4():
     # Now allow charing
     response = await conn.command("delay_trans")
     response = await conn.command("nodelay")
+    response = await conn.command("resume")
     await asyncio.sleep(90)  # Wait a litte, charging should have started.
     response = await conn.command("status")
     assert check(
@@ -231,9 +232,9 @@ async def test_case4():
 
 def main():
     # Run test case outside of pytest
-    asyncio.run(test_case1())
-    asyncio.run(test_case2())
-    asyncio.run(test_case3())
+#    asyncio.run(test_case1())
+#    asyncio.run(test_case2())
+#    asyncio.run(test_case3())
     asyncio.run(test_case4())
 
 

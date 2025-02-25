@@ -1303,11 +1303,12 @@ class Group:
                 conn._bz_done = True
 
                 # Don't go above this for remainder of session
-                conn._bz_ev_max_usage = conn._bz_allocation
-                logger.info(
-                    f"balanz: Due to EV lower usage, reducing alloc from {conn.offered} to {conn._bz_allocation}"
-                    f" for {conn.id_str()}"
-                )
+                if conn._bz_ev_max_usage is None or conn._bz_ev_max_usage > conn._bz_allocation:
+                    conn._bz_ev_max_usage = conn._bz_allocation
+                    logger.info(
+                        f"balanz: Due to EV lower usage, reducing alloc from {conn.offered} to {conn._bz_allocation}"
+                        f" for {conn.id_str()}"
+                    )
 
         ############
         # Next, review all connectors asking for allocation and determine their max (desired) usage
