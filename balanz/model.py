@@ -1000,7 +1000,7 @@ class Group:
                     # Update case
                     g: Group = Group.group_list[group["group_id"]]
                     g.description = group["description"]
-                    g.max_allocation = _sn(group["max_allocation"])
+                    g._max_allocation = _sn(group["max_allocation"])
                 else:
                     # Create case
                     Group(
