@@ -1235,9 +1235,7 @@ class Group:
         # making that decision (see comments above.)
         for conn in [c for c in connectors if not c._bz_done]:
             # SuspendedEV case - suspend part
-            if conn.status == ChargePointStatus.suspended_ev and conn.get_max_recent_usage() < config.getfloat(
-                "balanz", "usage_threshold"
-            ):
+            if conn.status == ChargePointStatus.suspended_ev:
                 if conn._bz_last_offer_time is not None and time.time() - conn._bz_last_offer_time > config.getint(
                     "balanz", "suspended_allocation_timeout"
                 ):
