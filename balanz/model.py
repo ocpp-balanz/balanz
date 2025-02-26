@@ -1223,7 +1223,7 @@ class Group:
             if conn.offered is None:
                 logger.warning(f"No offered value available for {conn.id_str()}. Assuming 0")
                 conn.offered = 0.0  # Assume nothing is offered. This could be dangerous if not correct!
-            conn._bz_allocation = conn.offered
+            conn._bz_allocation = 0
             conn._bz_done = False  # Done flag, reset it
             conn._bz_to_review = False  # Will be true shortly, anyway
 
@@ -1268,8 +1268,7 @@ class Group:
                         f"{time_str(conn._bz_suspend_until)}"
                     )
                 else:
-                    logger.debug(f"keeping allocation for suspended EV for now. {conn.id_str()}")
-                    conn._bz_done = True
+                    logger.debug(f"allowing continued allocation for suspended EV for now. {conn.id_str()}")
             # SuspendedEVSE / stay suspended case
             elif (
                 conn.status == ChargePointStatus.suspended_evse
@@ -1314,7 +1313,9 @@ class Group:
         # Next, review all connectors asking for allocation and determine their max (desired) usage
         for conn in [c for c in connectors if not c._bz_done]:
             if conn.status == ChargePointStatus.suspended_ev:
-                conn._bz_max = 0.0
+                # If - potentially - keeping allocation for a SuspendedEV session, at least do it
+                # at the minimum level.
+                conn._bz_max = config.getfloat("balanz", "min_allocation")
             else:
                 if conn.offered == 0 or conn.transaction is None:
                     logger.debug(f"Setting max offer to min_allocation for {conn.id_str()}.")
