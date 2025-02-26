@@ -51,7 +51,6 @@ from util import (
 logger = logging.getLogger("model")
 
 
-
 # ---------------------------
 # Utility functions (local)
 # ---------------------------
@@ -533,7 +532,7 @@ class Charger:
         ]
         result = {k: self.__dict__[k] for k in fields}
         result["connectors"] = {conn_id: self.connectors[conn_id].external() for conn_id in self.connectors.keys()}
-        result["network_connected"] = (self.ocpp_ref is not None)
+        result["network_connected"] = self.ocpp_ref is not None
         return result
 
     @staticmethod
@@ -1235,7 +1234,9 @@ class Group:
         # making that decision (see comments above.)
         for conn in [c for c in connectors if not c._bz_done]:
             # SuspendedEV case - suspend part
-            if conn.status == ChargePointStatus.suspended_ev:
+            if conn.status == ChargePointStatus.suspended_ev and conn.get_max_recent_usage() < config.getfloat(
+                "balanz", "usage_threshold"
+            ):
                 if conn._bz_last_offer_time is not None and time.time() - conn._bz_last_offer_time > config.getint(
                     "balanz", "suspended_allocation_timeout"
                 ):
@@ -1275,7 +1276,9 @@ class Group:
             ):
                 conn._bz_allocation = 0
                 conn._bz_done = True
-                logger.debug(f"Connector {conn.id_str()} will stay suspended, not yet {time_str(conn._bz_suspend_until)}")
+                logger.debug(
+                    f"Connector {conn.id_str()} will stay suspended, not yet {time_str(conn._bz_suspend_until)}"
+                )
             # Reduce offer case - can an specific limit be determined (EV, end-of-charging ...).
             # Putting quite a few criteria to not be too aggresive on this point.
             elif (
