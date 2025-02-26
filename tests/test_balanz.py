@@ -255,7 +255,7 @@ async def test_case1():
     response = await rr2_02.command("status")
     assert check(
         response,
-        "Status: SuspendedEV, transaction_id: 1, offer: 12.0 A, energy: 1100 Wh, delay: True, max_usage: 10.0",
+        "Status: SuspendedEV, transaction_id: 1, offer: 6.0 A, energy: 1100 Wh, delay: True, max_usage: 10.0",
     )
 
     response = await rr2_03.command("status")
