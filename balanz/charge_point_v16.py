@@ -287,3 +287,15 @@ class ChargePoint_v16(cp):
         Triggers the meter values to be sent to the charging station.
         """
         return await self.trigger_message_req(requested_message=MessageTrigger.meter_values)
+
+    async def trigger_status_notification(self, connector_id: int):
+        """
+        Triggers a status notification to be sent to the charging station.
+        """
+        return await self.trigger_message_req(requested_message=MessageTrigger.status_notification, connector_id=connector_id)
+
+    async def trigger_boot_notification(self):
+        """
+        Triggers a boot notification to be sent to the charging station.
+        """
+        return await self.trigger_message_req(requested_message=MessageTrigger.boot_notification)

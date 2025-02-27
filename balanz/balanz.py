@@ -266,6 +266,9 @@ async def balanz_loop(group: Group):
             chargers_to_request_status = group.chargers_to_request_status()
             if chargers_to_request_status:
                 for charger in chargers_to_request_status:
+                    await charger.ocpp_ref.trigger_boot_notification()
+                    for connector_id in charger.connectors:
+                        await charger.ocpp_ref.trigger_status_notification(connector_id=connector_id)
                     await charger.ocpp_ref.trigger_meter_values()
                     charger.requested_status = True
 
