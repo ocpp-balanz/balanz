@@ -1360,9 +1360,9 @@ class Group:
             c
             for c in connectors
             if not c._bz_done
-            and conn.transaction is None
-            and conn.status == ChargePointStatus.suspended_evse
-            and (conn._bz_suspend_until is None or time.time() >= conn._bz_suspend_until)
+            and c.transaction is None
+            and c.status == ChargePointStatus.suspended_evse
+            and (c._bz_suspend_until is None or time.time() >= c._bz_suspend_until)
         ]:
             if remain_allocation >= config.getfloat("balanz", "min_allocation"):
                 # It will fit, let's do it
