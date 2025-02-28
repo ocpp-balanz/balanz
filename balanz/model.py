@@ -42,10 +42,10 @@ from util import (
     duration_str,
     kwh_str,
     max_priority_allocation,
+    parse_time,
     schedule_value_now,
     status_in_transaction,
     time_str,
-    parse_time
 )
 
 # Logging setup
@@ -161,7 +161,8 @@ class Session:
     # CSV Writer
     session_writer: csv.writer = None
 
-    def __init__(self,
+    def __init__(
+        self,
         charger_id: str,
         charger_alias: str,
         group_id: str,
@@ -177,7 +178,7 @@ class Session:
         reason: str,
         duration: float,
         energy_meter: float,
-        session_id: str
+        session_id: str,
     ) -> None:
         # Copy relevant fields from Transaction
         self.charger_id: str = charger_id
@@ -212,22 +213,22 @@ class Session:
         session_id = trans.charger_id + "-" + datetime.fromtimestamp(trans.start_time).strftime("%Y-%m-%d-%H:%M:%S")
 
         self = cls(
-            session_id = session_id,
-            charger_id = trans.charger_id,
-            charger_alias = Charger.charger_list[trans.charger_id].alias,
-            group_id = Charger.charger_list[trans.charger_id].group_id,
-            connector_id = trans.connector_id,
-            id_tag = trans.id_tag,
-            user_name = trans.user_name,
-            meter_start = trans.meter_start,
-            start_time = trans.start_time,
-            charging_history = trans.charging_history,
-            meter_stop = meter_stop,
-            end_time = round(timestamp, 2),
-            stop_id_tag = stop_id_tag,
-            reason = reason,
-            duration = round(timestamp, 2) - trans.start_time,
-            energy_meter = meter_stop - trans.meter_start
+            session_id=session_id,
+            charger_id=trans.charger_id,
+            charger_alias=Charger.charger_list[trans.charger_id].alias,
+            group_id=Charger.charger_list[trans.charger_id].group_id,
+            connector_id=trans.connector_id,
+            id_tag=trans.id_tag,
+            user_name=trans.user_name,
+            meter_start=trans.meter_start,
+            start_time=trans.start_time,
+            charging_history=trans.charging_history,
+            meter_stop=meter_stop,
+            end_time=round(timestamp, 2),
+            stop_id_tag=stop_id_tag,
+            reason=reason,
+            duration=round(timestamp, 2) - trans.start_time,
+            energy_meter=meter_stop - trans.meter_start,
         )
 
         # Write to CSV file if registered
@@ -255,37 +256,30 @@ class Session:
         logger.info(f"Created session {self.session_id} for connector {self.charger_id}/{self.connector_id}")
 
     @classmethod
-    def from_csv(
-        cls,
-        session 
-    ) -> None:
-        logger.info(f'{session}')
-
+    def from_csv(cls, session) -> None:
         self = cls(
-            session_id = session["session_id"],
-            charger_id = session["charger_id"],
-            charger_alias = session["charger_alias"],
-            group_id = session["group_id"],
-            connector_id = 1,   # Ups. Forgot to write that. TODO
-            id_tag = session["id_tag"],
-            user_name = session["user_name"],
-            meter_start = 0,
-            start_time = parse_time(session["start_time"]),
-            end_time = parse_time(session["end_time"]),
-            stop_id_tag = session["stop_id_tag"],
-            duration = 0,       # TODO
-            energy_meter = float(session["energy"]) * 1000.0,
-            reason = session["stop_reason"],
-            charging_history = [],   # session.history # TODO: Convert
-            meter_stop = float(session["energy"]) * 1000.0,
+            session_id=session["session_id"],
+            charger_id=session["charger_id"],
+            charger_alias=session["charger_alias"],
+            group_id=session["group_id"],
+            connector_id=1,  # Ups. Forgot to write that. TODO
+            id_tag=session["id_tag"],
+            user_name=session["user_name"],
+            meter_start=0,
+            start_time=parse_time(session["start_time"]),
+            end_time=parse_time(session["end_time"]),
+            stop_id_tag=session["stop_id_tag"],
+            duration=0,  # TODO
+            energy_meter=float(session["energy"]) * 1000.0,
+            reason=session["stop_reason"],
+            charging_history=[],  # session.history # TODO: Convert
+            meter_stop=float(session["energy"]) * 1000.0,
         )
 
         # Charging history
         for ch in session["history"].split(";"):
-            logger.info(f'{ch}')
             [timestamp, ampere] = ch.split("=")
             self.charging_history.append(ChargingHistory(timestamp=parse_time(timestamp), offered=float(ampere[:-1])))
-
 
     def external(self) -> str:
         fields = [

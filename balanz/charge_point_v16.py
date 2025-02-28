@@ -292,7 +292,9 @@ class ChargePoint_v16(cp):
         """
         Triggers a status notification to be sent to the charging station.
         """
-        return await self.trigger_message_req(requested_message=MessageTrigger.status_notification, connector_id=connector_id)
+        return await self.trigger_message_req(
+            requested_message=MessageTrigger.status_notification, connector_id=connector_id
+        )
 
     async def trigger_boot_notification(self):
         """
