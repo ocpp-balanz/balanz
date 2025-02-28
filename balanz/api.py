@@ -621,7 +621,7 @@ async def api_handler(websocket):
                         f"Invalid Command {command}",
                     ]
             if command != "DrawAll":
-                logger.info(f"API response: {result}")
+                logger.debug(f"API response: {result}")
             await websocket.send(json.dumps(result))
 
         except websockets.exceptions.ConnectionClosed:
