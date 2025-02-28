@@ -45,6 +45,7 @@ from util import (
     schedule_value_now,
     status_in_transaction,
     time_str,
+    parse_time
 )
 
 # Logging setup
@@ -253,6 +254,39 @@ class Session:
             )
         logger.info(f"Created session {self.session_id} for connector {self.charger_id}/{self.connector_id}")
 
+    @classmethod
+    def from_csv(
+        cls,
+        session 
+    ) -> None:
+        logger.info(f'{session}')
+
+        self = cls(
+            session_id = session["session_id"],
+            charger_id = session["charger_id"],
+            charger_alias = session["charger_alias"],
+            group_id = session["group_id"],
+            connector_id = 1,   # Ups. Forgot to write that. TODO
+            id_tag = session["id_tag"],
+            user_name = session["user_name"],
+            meter_start = 0,
+            start_time = parse_time(session["start_time"]),
+            end_time = parse_time(session["end_time"]),
+            stop_id_tag = session["stop_id_tag"],
+            duration = 0,       # TODO
+            energy_meter = float(session["energy"]) * 1000.0,
+            reason = session["stop_reason"],
+            charging_history = [],   # session.history # TODO: Convert
+            meter_stop = float(session["energy"]) * 1000.0,
+        )
+
+        # Charging history
+        for ch in session["history"].split(";"):
+            logger.info(f'{ch}')
+            [timestamp, ampere] = ch.split("=")
+            self.charging_history.append(ChargingHistory(timestamp=parse_time(timestamp), offered=float(ampere[:-1])))
+
+
     def external(self) -> str:
         fields = [
             "session_id",
@@ -301,6 +335,10 @@ class Session:
                 ]
             )
             file.close()
+
+        # Read old CSV values
+        Session.read_csv(filename)
+
         file = open(filename, "a+", newline="", buffering=1)
         Session.session_writer = csv.writer(file)
         logger.info(f"Appending completed sessions to {filename}")
@@ -314,20 +352,8 @@ class Session:
         with open(file, mode="r") as file:
             reader = csv.DictReader(file)
             for session in reader:
-                if session["session_id"] in Session.session_list:
-                    # Already there. pass
-                    pass
-                else:
-                    Session(
-                        charger_id=charger["charger_id"],
-                        alias=charger["alias"],
-                        group_id=_sn(charger["group_id"]),
-                        no_connectors=_in(charger["no_connectors"]),
-                        priority=_in(charger["priority"]),
-                        description=charger["description"],
-                        conn_max=_fn(charger["conn_max"]),
-                        auth_sha=_sn(charger["auth_sha"]),
-                    )
+                if session["session_id"] not in Session.session_list:
+                    Session.from_csv(session)
 
     def __str__(self) -> str:
         return str(vars(self))
