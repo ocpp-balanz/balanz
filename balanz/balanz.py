@@ -70,8 +70,8 @@ async def on_connect(websocket: websockets.asyncio.server.ServerConnection):
         if config.getboolean("model", "charger_autoregister"):
             auto_group_id = config.get("model", "charger_autoregister_group")
 
-            # Auto-register it the charger
-            Charger(charger_id=charger_id, group_id=auto_group_id)
+            # Auto-register it the charger. Need to "invent" an alias
+            Charger(charger_id=charger_id, group_id=auto_group_id, alias=charger_id)
         else:
             msg = f"Charge point {charger_id} unknown"
             logger.error(msg)
