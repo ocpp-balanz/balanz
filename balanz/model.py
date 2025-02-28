@@ -1286,7 +1286,6 @@ class Group:
                 and conn.transaction is not None
                 and conn.transaction.usage_meter is not None
                 and time.time() - conn._bz_last_offer_time > config.getint("balanz", "usage_monitoring_interval")
-                and conn.get_max_recent_usage() >= config.getfloat("balanz", "min_allocation")
                 and conn.offered is not None
                 and conn.get_max_recent_usage() <= conn.offered - config.getfloat("balanz", "margin_lower")
                 and conn.offered >= config.getfloat("balanz", "min_allocation")
