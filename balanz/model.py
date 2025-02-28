@@ -160,43 +160,74 @@ class Session:
     # CSV Writer
     session_writer: csv.writer = None
 
-    def __init__(
-        self,
+    def __init__(self,
+        charger_id: str,
+        charger_alias: str,
+        group_id: str,
+        connector_id: int,
+        id_tag: str,
+        user_name: str,
+        meter_start: float,
+        start_time: float,
+        charging_history: list[ChargingHistory],
+        meter_stop: float,
+        end_time: float,
+        stop_id_tag: str,
+        reason: str,
+        duration: float,
+        energy_meter: float,
+        session_id: str
+    ) -> None:
+        # Copy relevant fields from Transaction
+        self.charger_id: str = charger_id
+        self.charger_alias: str = charger_alias
+        self.group_id: str = group_id
+        self.connector_id = connector_id
+        self.id_tag: str = id_tag
+        self.user_name: str = user_name
+        self.meter_start: float = meter_start
+        self.start_time: float = start_time
+        self.charging_history: list[ChargingHistory] = charging_history
+        self.meter_stop: float = meter_stop
+        self.end_time: float = end_time
+        self.stop_id_tag: str = stop_id_tag
+        self.reason: str = reason
+        self.duration: float = duration
+        self.energy_meter: float = energy_meter
+        self.session_id: str = session_id
+
+        # Insert to the charging session list
+        Session.session_list[self.session_id] = self
+
+    @classmethod
+    def from_transition(
+        cls,
         trans: Transaction,
         meter_stop: int,
         timestamp: float,
         reason: str = None,
         stop_id_tag: str = None,
     ) -> None:
-        # Copy relevant fields from Transaction
-        self.charger_id: str = trans.charger_id
-        self.charger_alias: str = Charger.charger_list[self.charger_id].alias
-        self.group_id: str = Charger.charger_list[self.charger_id].group_id
-        self.connector_id: int = trans.connector_id
-        self.id_tag: str = trans.id_tag
-        self.user_name: str = trans.user_name
+        session_id = trans.charger_id + "-" + datetime.fromtimestamp(trans.start_time).strftime("%Y-%m-%d-%H:%M:%S")
 
-        self.meter_start: float = trans.meter_start
-        self.start_time: float = trans.start_time
-        self.user_name: str = trans.user_name
-        self.charging_history: list[ChargingHistory] = trans.charging_history
-
-        # Remaining fields (arguments or calculated)
-        self.meter_stop = meter_stop
-        self.end_time = round(timestamp, 2)
-        self.stop_id_tag = stop_id_tag
-        self.reason = reason
-        self.duration: float = self.end_time - self.start_time
-        self.energy_meter: float = self.meter_stop - self.meter_start
-
-        # Generate a charging session id to be associated with the transaction.
-        # This will be used later for storing the charging session data.
-        self.session_id: str = (
-            self.charger_id + "-" + datetime.fromtimestamp(self.start_time).strftime("%Y-%m-%d-%H:%M:%S")
+        self = cls(
+            session_id = session_id,
+            charger_id = trans.charger_id,
+            charger_alias = Charger.charger_list[trans.charger_id].alias,
+            group_id = Charger.charger_list[trans.charger_id].group_id,
+            connector_id = trans.connector_id,
+            id_tag = trans.id_tag,
+            user_name = trans.user_name,
+            meter_start = trans.meter_start,
+            start_time = trans.start_time,
+            charging_history = trans.charging_history,
+            meter_stop = meter_stop,
+            end_time = round(timestamp, 2),
+            stop_id_tag = stop_id_tag,
+            reason = reason,
+            duration = round(timestamp, 2) - trans.start_time,
+            energy_meter = meter_stop - trans.meter_start
         )
-
-        # Insert to the charging session list
-        Session.session_list[self.session_id] = self
 
         # Write to CSV file if registered
         if Session.session_writer:
@@ -273,6 +304,30 @@ class Session:
         file = open(filename, "a+", newline="", buffering=1)
         Session.session_writer = csv.writer(file)
         logger.info(f"Appending completed sessions to {filename}")
+
+    @staticmethod
+    def read_csv(file: str) -> None:
+        """Read sessions from CSV file
+        Can be called again. If so will update (if changed) alias, priority, description, conn_max, and auth_sha
+        """
+        logger.info(f"Reading sessions from {file}")
+        with open(file, mode="r") as file:
+            reader = csv.DictReader(file)
+            for session in reader:
+                if session["session_id"] in Session.session_list:
+                    # Already there. pass
+                    pass
+                else:
+                    Session(
+                        charger_id=charger["charger_id"],
+                        alias=charger["alias"],
+                        group_id=_sn(charger["group_id"]),
+                        no_connectors=_in(charger["no_connectors"]),
+                        priority=_in(charger["priority"]),
+                        description=charger["description"],
+                        conn_max=_fn(charger["conn_max"]),
+                        auth_sha=_sn(charger["auth_sha"]),
+                    )
 
     def __str__(self) -> str:
         return str(vars(self))
@@ -766,7 +821,7 @@ class Charger:
         timestamp: float,
         reason: str = None,
         stop_id_tag: str = None,
-    ) -> str:
+    ) -> None:
         """Stop a transaction on the connector. Returns the charging session id."""
         # Find the connector
         search_id = [
@@ -786,7 +841,7 @@ class Charger:
         connector.transaction.charging_history.append(ChargingHistory(timestamp=timestamp, offered=0))
 
         # Make Session object
-        session = Session(
+        Session.from_transition(
             connector.transaction,
             meter_stop=meter_stop,
             timestamp=timestamp,
@@ -805,8 +860,6 @@ class Charger:
             f"stop_transaction: Connector {self.charger_id}/{connector.connector_id} stopped."
             f" id_tag: {stop_id_tag}, reason: {reason}"
         )
-
-        return session.session_id
 
     def status_notification(self, connector_id: int, status: ChargePointStatus) -> None:
         """Update the status of the connector. Will also update the last_update field."""
