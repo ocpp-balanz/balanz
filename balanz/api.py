@@ -115,7 +115,12 @@ async def api_handler(websocket):
                     # TODO: Add more
                     result = [MessageType.CallResult, message_id, {
                                   "version": config.get("balanz", "version"),
-                                  "starttime": config.get("balanz", "starttime")
+                                  "starttime": config.get("balanz", "starttime"),
+                                  "no_tags": len(Tag.tag_list),
+                                  "no_groups": len(Group.group_list),
+                                  "no_chargers": len(Charger.charger_list),
+                                  "no_sessions": len(Session.session_list),
+                                  "logging": {name: logging.getLevelName(logging.getLogger(name).level) for name in config["logging"]}
                               }]
                 elif not result and command == "DrawAll":
                     historic = payload.get("historic", True)
