@@ -57,6 +57,7 @@
       <option value="CreateTag">CreateTag</option>
       <option value="DeleteTag">DeleteTag</option>
       <option value="GetSessions">GetSessions</option>
+      <option value="GetCSVSessions">GetCSVSessions</option>
       <option value="SetChargePriority">SetChargePriority</option>
       <option value="SetLogLevel">SetLogLevel</option>
       <option value="ClearDefaultProfiles">ClearDefaultProfiles</option>
@@ -141,6 +142,8 @@
         args = '{"id_tag": "id_tag"}';
       } else if (command == "GetSessions") {
         args = '{"group_id": "group_id", "charger_id": "charger_id"}'
+      } else if (command == "GetCSVSessions") {
+        args = '{}'
       } else if (command == "SetChargePriority") {
         args = '{"charger_id": "charger_id", "connector_id": 1, "priority": 10}';
       } else if (command == "SetLogLevel") {

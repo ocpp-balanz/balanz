@@ -356,6 +356,10 @@ async def api_handler(websocket):
                         s for s in Session.session_list.values() if charger_list is None or s.charger_id in charger_list
                     ]
                     result = [MessageType.CallResult, message_id, [s.external() for s in sessions]]
+                elif not result and command == "GetCSVSessions":
+                    csv_file = open(config["history"]["session_csv"], mode='r')
+                    result = [MessageType.CallResult, message_id, csv_file.read()]
+                    csv_file.close()
                 elif not result and command == "SetBalanzState":
                     balanz_suspend = payload.get("suspend", False)
                     group_id = payload.get("group_id", None)

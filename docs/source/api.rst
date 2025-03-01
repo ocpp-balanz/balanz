@@ -96,6 +96,9 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``GetSessions``
      - ``charger_id, group_id``
      - Returns all historic sessions matching filter
+   * - ``GetSessions``
+     - (None)
+     - Returns CSV file (as one long text string) with all historic sessions
    * - ``SetLogLevel``
      - ``component, loglevel``
      - Dynamically update log level. See list of components in the balanz configuration file. 
