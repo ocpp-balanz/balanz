@@ -441,8 +441,9 @@ async def main():
     # Read config. config object is then available (via config import) to all.
     config.read(args.config)
 
-    # Cheat to use config to share version info
+    # Cheat to use config to share version info and startup-time
     config["balanz"]["version"] = balanz_version
+    config["balanz"]["starttime"] = time_str(time.time())
 
     # Adjust log levels
     for logger_name in config["logging"]:

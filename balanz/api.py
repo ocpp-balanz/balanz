@@ -25,7 +25,7 @@ from ocpp.v16.enums import (
     ResetType,
     TriggerMessageStatus,
 )
-from util import gen_sha_256
+from util import gen_sha_256, time_str
 
 logger = logging.getLogger("api")
 
@@ -113,7 +113,10 @@ async def api_handler(websocket):
                         logged_in = True
                 elif not result and command == "GetStatus":
                     # TODO: Add more
-                    result = [MessageType.CallResult, message_id, {"version": config.get("balanz", "version")}]
+                    result = [MessageType.CallResult, message_id, {
+                                  "version": config.get("balanz", "version"),
+                                  "starttime": config.get("balanz", "starttime")
+                              }]
                 elif not result and command == "DrawAll":
                     historic = payload.get("historic", True)
                     drawing = drawmodel.draw_all(historic=historic)
