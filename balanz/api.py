@@ -113,15 +113,21 @@ async def api_handler(websocket):
                         logged_in = True
                 elif not result and command == "GetStatus":
                     # TODO: Add more
-                    result = [MessageType.CallResult, message_id, {
-                                  "version": config.get("balanz", "version"),
-                                  "starttime": config.get("balanz", "starttime"),
-                                  "no_tags": len(Tag.tag_list),
-                                  "no_groups": len(Group.group_list),
-                                  "no_chargers": len(Charger.charger_list),
-                                  "no_sessions": len(Session.session_list),
-                                  "logging": {name: logging.getLevelName(logging.getLogger(name).level) for name in config["logging"]}
-                              }]
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        {
+                            "version": config.get("balanz", "version"),
+                            "starttime": config.get("balanz", "starttime"),
+                            "no_tags": len(Tag.tag_list),
+                            "no_groups": len(Group.group_list),
+                            "no_chargers": len(Charger.charger_list),
+                            "no_sessions": len(Session.session_list),
+                            "logging": {
+                                name: logging.getLevelName(logging.getLogger(name).level) for name in config["logging"]
+                            },
+                        },
+                    ]
                 elif not result and command == "DrawAll":
                     historic = payload.get("historic", True)
                     drawing = drawmodel.draw_all(historic=historic)
@@ -365,7 +371,7 @@ async def api_handler(websocket):
                     ]
                     result = [MessageType.CallResult, message_id, [s.external() for s in sessions]]
                 elif not result and command == "GetCSVSessions":
-                    csv_file = open(config["history"]["session_csv"], mode='r')
+                    csv_file = open(config["history"]["session_csv"], mode="r")
                     result = [MessageType.CallResult, message_id, csv_file.read()]
                     csv_file.close()
                 elif not result and command == "SetBalanzState":
