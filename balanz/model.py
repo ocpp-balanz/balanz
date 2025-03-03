@@ -92,9 +92,10 @@ class ChargeChange:
 class ChargingHistory:
     timestamp: float
     offered: float
+    usage: float
 
     def external(self) -> str:
-        return {"timestamp": self.timestamp, "offered": self.offered}
+        return {"timestamp": self.timestamp, "offered": self.offered, "usage": self.usage}
 
 
 class TagStatusType(StrEnum):
@@ -233,9 +234,18 @@ class Session:
 
         # Write to CSV file if registered
         if Session.session_writer:
+            def format_history(ch: ChargingHistory) -> string:
+                result: string = time_str(ch.timestamp) + "="
+                if ch.offered is not None:
+                    result += f'{ch.offered}A'
+                result += '/'
+                if ch.usage is not None:
+                    result += f"{ch.usage}A"
+                return result                    
+
             history = ""
             if self.charging_history:
-                history = ";".join([f"{time_str(ch.timestamp)}={ch.offered}A" for ch in self.charging_history])
+                history = ";".join([format_history(ch) for ch in self.charging_history])
             Session.session_writer.writerow(
                 [
                     self.session_id,
@@ -272,14 +282,24 @@ class Session:
             duration=0,  # TODO
             energy_meter=float(session["energy"]) * 1000.0,
             reason=session["stop_reason"],
-            charging_history=[],  # session.history # TODO: Convert
+            charging_history=[],  
             meter_stop=float(session["energy"]) * 1000.0,
         )
 
         # Charging history
         for ch in session["history"].split(";"):
-            [timestamp, ampere] = ch.split("=")
-            self.charging_history.append(ChargingHistory(timestamp=parse_time(timestamp), offered=float(ampere[:-1])))
+            [timestamp, values] = ch.split("=")
+            if not '/' in values:
+                # old format, only offered
+                offered = float(values[:-1])
+                usage = None
+            else:
+                # new format, offered and/or usage
+                [offered, usage] = values.split("/")
+                offered = None if offered == "" else float(offered[:-1])
+                usage = None if usage == "" else float(usage[:-1])
+
+            self.charging_history.append(ChargingHistory(timestamp=parse_time(timestamp), offered=offered, usage=usage))
 
     def external(self) -> str:
         fields = [
@@ -732,7 +752,7 @@ class Charger:
         # Charging history
         if connector.transaction is not None:
             connector.transaction.charging_history.append(
-                ChargingHistory(timestamp=time.time(), offered=connector.offered)
+                ChargingHistory(timestamp=time.time(), offered=connector.offered, usage = None)
             )
         logger.debug(f"Charge change done {charge_change}.")
 
@@ -858,7 +878,7 @@ class Charger:
         connector = self.connectors[connector_id]
 
         # Make a final historic entry
-        connector.transaction.charging_history.append(ChargingHistory(timestamp=timestamp, offered=0))
+        connector.transaction.charging_history.append(ChargingHistory(timestamp=timestamp, offered=0, usage=0))
 
         # Make Session object
         Session.from_transition(
@@ -986,6 +1006,15 @@ class Charger:
 
         # If in review usage_meter for new max
         connector.update_recent_usage(usage=usage_meter, timestamp=timestamp)
+
+        # Update charging history (if change is significant) 
+        last_usage = None
+        for ch in reversed(connector.transaction.charging_history):
+            if ch.usage != None:
+                last_usage = ch.usage
+                break
+        if last_usage is None or abs(last_usage - usage_meter) >= config.getfloat("history", minimum_usage_change):
+            connector.transaction.charging_history.append(ChargingHistory(timestamp=timestamp, offered=None, usage=usage_meter))
 
 
 class Group:
