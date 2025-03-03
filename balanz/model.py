@@ -1013,7 +1013,7 @@ class Charger:
             if ch.usage != None:
                 last_usage = ch.usage
                 break
-        if last_usage is None or abs(last_usage - usage_meter) >= config.getfloat("history", minimum_usage_change):
+        if last_usage is None or abs(last_usage - usage_meter) >= config.getfloat("history", "minimum_usage_change"):
             connector.transaction.charging_history.append(ChargingHistory(timestamp=timestamp, offered=None, usage=usage_meter))
 
 
