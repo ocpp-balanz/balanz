@@ -18,6 +18,7 @@ from charge_point_csms_v16 import ChargePoint_CSMS_v16
 from charge_point_lc_v16 import ChargePoint_LC_v16
 from config import config
 from model import ChargeChange, Charger, Connector, Group, Session, Tag, Transaction
+from user import User
 from ocpp.v16.enums import ChargePointStatus, ChargingProfileStatus, ClearChargingProfileStatus, Reason
 from util import gen_sha_256, time_str
 from websockets.frames import CloseCode
@@ -462,7 +463,8 @@ async def main():
     Tag.read_csv(config["model"]["tags_csv"])
     if config.has_option("history", "session_csv"):
         Session.register_csv_file(config["history"]["session_csv"])
-
+    User.read_csv(config["api"]["users_csv"])
+    
     # Start server, either ws:// or wss://
     if cert_chain and cert_key:
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

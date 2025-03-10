@@ -14,6 +14,7 @@ import websockets.asyncio
 import websockets.asyncio.server
 from config import config
 from model import Charger, Group, Session, Tag
+from user import User, UserType
 from ocpp.messages import MessageType
 from ocpp.v16 import call_result
 from ocpp.v16.enums import (
@@ -101,16 +102,23 @@ async def api_handler(websocket):
                 # The commands
                 if not result and command == "Login":
                     token = payload.get("token", None)
-                    token_shas = config.get("api", "token_shas")
-                    if not token or not token_shas or not gen_sha_256(token) in token_shas.split(","):
+                    if not token:
                         result = [
                             MessageType.CallError,
                             message_id,
                             {"status": "InvalidLogin"},
                         ]
                     else:
-                        result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
-                        logged_in = True
+                        user_type: UserType = User.check_auth(token)
+                        if user_type is None:
+                            result = [
+                                MessageType.CallError,
+                                message_id,
+                                {"status": "InvalidLogin"},
+                            ]
+                        else:
+                            result = [MessageType.CallResult, message_id, {"user_type": user_type}]
+                            logged_in = True
                 elif not result and command == "GetStatus":
                     # TODO: Add more
                     result = [
