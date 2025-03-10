@@ -10,16 +10,27 @@ as JSON messages in the format ``[2, <messageId>, <command>, <payload>]``. Succe
 ``[3, <messageId>, <payload>]`` while error responses are ``[4, <messageId>, <errorMessage>]``.
 
 The client is expected to Authenticate using the `Login` call before issuing other commands. Otherwise,
-they will be rejected. The sha256 value of token specified in a list in the balanz configuration file.
+they will be rejected. The ``token`` string is a concatenation of the ``user_id`` and ``password``.
+The sha256 value of the token will be validated against users in the ``users.csv`` file.
+
+A user type combines the available API methods with the available UI screens/focus. The following ``user_types`` are supported:
+
+  - ``Status`` - API read-only access. UI only has status screen
+  - ``Analysis`` - API read-only access. Screens available in read-only mode
+  - ``StatusAndPriority`` - As ``Status``, except possible to override session priority
+  - ``AnalysisAndTags`` - As ``Analysis``, ability to override session priority and maintain tags
+  - ``Admin`` - All access
+
+The sha256 value of token specified in a list in the balanz configuration file.
 An online tool may be used, e.g. `Coding Tools <https://coding.tools/sha256>`_. Set the tool to generate
 lower case sha256 values as in the example below (first sha matches the token set in the example UIs).
 
 .. code-block:: text
-    :caption: Example of API token sha setting
+    :caption: Example ``users.csv`` file
 
-    [api]
-    ; Comma-separated list of valid sha256 values for login tokens. 
-    token_shas = 4a8b74ba66bb2dad068addac37fa6faaa8996ca84a4d94bdc12a54e4e2732a6a,4a8b74ba66bb2dad068addac37fa6faaa8996ca84a4d94bdc12a54e4e2732a64
+    user_id,user_type,description,auth_sha
+    delete-admin,Admin,Initial admin user (admin/admin) - DELETE ME,d82494f05d6917ba02f7aaa29689ccb444bb73f20380876cb05d1f37537b7892
+    example-ui,Admin,,4a8b74ba66bb2dad068addac37fa6faaa8996ca84a4d94bdc12a54e4e2732a6a
 
 
 Model commands
@@ -56,10 +67,10 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - Returns all users
    * - ``CreateUser``
      - ``user_id, user_type, description, password``
-     - Create new user. User type must be one of "ReadOnly", "TagPriority", or "Admin"
+     - Create new user. 
    * - ``UpdateUser``
      - ``user_id, user_type, description, password``
-     - Update user. User type must be one of "ReadOnly", "TagPriority", or "Admin"
+     - Update user
    * - ``DeleteUser``
      - ``user_id``
      - Delete user

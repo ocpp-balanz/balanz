@@ -27,13 +27,22 @@ from ocpp.v16.enums import (
     TriggerMessageStatus,
 )
 from util import gen_sha_256, time_str
+from user import UserType
 
 logger = logging.getLogger("api")
 
+# Const definitions of API access for the different roles (as per UserType)
+API_ALLOW = {}
+API_ALLOW[UserType.status] = ["GetGroups", "GetChargers"]
+API_ALLOW[UserType.analysis] = API_ALLOW[UserType.status] + ["GetTags", "DrawAll", "GetSessions"]
+API_ALLOW[UserType.priority_and_status] = API_ALLOW[UserType.status] + ["SetChargePriority"]
+API_ALLOW[UserType.tag] = API_ALLOW[UserType.analysis] + ["SetChargePriority", "WriteTags", "UpdateTag", "CreateTag", "DeleteTag"]
+# Admin is just everything, no need to mention
 
 async def api_handler(websocket):
     """Handler for the API"""
     logged_in: bool = False
+    logged_in_user_type: UserType = None
 
     # Command/Call loop
     while True:
@@ -56,6 +65,10 @@ async def api_handler(websocket):
 
                 # Handle logon directly
                 if not logged_in and command != "Login":
+                    result = [MessageType.CallError, message_id, {"status": "NotAuthorized"}]
+
+                # Ensure that logged in user is authorized to do the call.
+                if logged_in and command != "Login" and logged_in_user_type != UserType.admin and command not in API_ALLOW[logged_in_user_type]:
                     result = [MessageType.CallError, message_id, {"status": "NotAuthorized"}]
 
                 # Resolve charger alias for all calls quietly by adapting payload
@@ -119,6 +132,7 @@ async def api_handler(websocket):
                         else:
                             result = [MessageType.CallResult, message_id, {"user_type": user_type}]
                             logged_in = True
+                            logged_in_user_type = user_type
                 elif not result and command == "GetStatus":
                     # TODO: Add more
                     result = [
@@ -157,7 +171,7 @@ async def api_handler(websocket):
                         result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
                 elif not result and command == "CreateUser":
                     user_id = payload.get("user_id", None)
-                    user_type = payload.get("user_type", UserType.read_only)
+                    user_type = payload.get("user_type", None)
                     descrition = payload.get("description", "")
                     password = payload.get("password", None)
                     if user_id is None or user_id in User.user_list or password is None:

@@ -14,9 +14,21 @@ from util import gen_sha_256
 logger = logging.getLogger("user")
 
 class UserType(StrEnum):
-    """User types."""
-    read_only = "ReadOnly"
-    tag_priority = "TagsPriority"
+    """User types.
+     
+    A user type combines the available API methods with the available UI screens/focus.
+    """
+    # ReadOnly types:
+    status = "Status"
+    analysis = "Analysis"
+
+    # Overwrite session priority
+    priority_and_status = "SessionPriority"
+
+    # Maintain tags
+    tag = "Tags"
+
+    # Everything
     admin = "Admin"
 
 # Forward declaration
@@ -34,12 +46,12 @@ class User:
     # Static dictionary of Sessions. Key is a generated session_id.
     user_list: dict[User] = {}
 
-    def __init__(self, user_id: str, password: str = None, user_type: UserType = UserType.read_only, description: str = "", auth_sha: str = None) -> None:
+    def __init__(self, user_id: str, password: str = None, user_type: UserType = None, description: str = "", auth_sha: str = None) -> None:
         """Init"""
         self.user_id: str = user_id
         self.auth_sha: str = auth_sha
         self.description: str = description
-        self.user_type: UserType = user_type
+        self.user_type: UserType = user_type if user_type else UserType.status
         if auth_sha is None and password is not None:
             self.auth_sha = gen_sha_256(user_id + password)
         # Ignore if already there
