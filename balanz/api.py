@@ -140,6 +140,42 @@ async def api_handler(websocket):
                     historic = payload.get("historic", True)
                     drawing = drawmodel.draw_all(historic=historic)
                     result = [MessageType.CallResult, message_id, {"drawing": drawing}]
+                elif not result and command == "GetUsers":
+                    result = [MessageType.CallResult, message_id, [u.external() for u in User.user_list.values()]]
+                elif not result and command == "UpdateUser":
+                    user_id = payload.get("user_id", None)
+                    user_type = payload.get("user_type", None)
+                    descrition = payload.get("description", None)
+                    password = payload.get("password", None)
+                    if user_id is None or user_id not in User.user_list:
+                        result = [MessageType.CallError, message_id, "IllegalArguments"]
+                    else:
+                        user = User.user_list[user_id]
+                        user.update(password=password, user_type=user_type, description=descrition)
+                        # Write update to file
+                        User.write_csv(config["api"]["users_csv"])
+                        result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
+                elif not result and command == "CreateUser":
+                    user_id = payload.get("user_id", None)
+                    user_type = payload.get("user_type", UserType.read_only)
+                    descrition = payload.get("description", "")
+                    password = payload.get("password", None)
+                    if user_id is None or user_id in User.user_list or password is None:
+                        result = [MessageType.CallError, message_id, "IllegalArguments"]
+                    else:
+                        User(user_id=user_id, user_type=user_type, description=descrition, password=password)
+                        # Write update to file
+                        User.write_csv(config["api"]["users_csv"])
+                        result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
+                elif not result and command == "DeleteUser":
+                    user_id = payload.get("user_id", None)
+                    if user_id is None or user_id not in User.user_list:
+                        result = [MessageType.CallError, message_id, "IllegalArguments"]
+                    else:
+                        del User.user_list[user_id]
+                        # Write update to file
+                        User.write_csv(config["api"]["users_csv"])
+                        result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
                 elif not result and command == "GetGroups":
                     charger_details = payload.get("charger_details", False)
                     result = [

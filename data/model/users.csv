@@ -1,0 +1,6 @@
+user_id,user_type,description,auth_sha
+delete-admin,Admin,Initial admin user (admin/admin) - DELETE ME,d82494f05d6917ba02f7aaa29689ccb444bb73f20380876cb05d1f37537b7892
+example-ui,Admin,,4a8b74ba66bb2dad068addac37fa6faaa8996ca84a4d94bdc12a54e4e2732a6a
+test-suite,Admin,,4a8b74ba66bb2dad068addac37fa6faaa8996ca84a4d94bdc12a54e4e2732a64
+random,Admin,,a602774dffcacf0c4b329a384d3d309143af221179f176c18cc1e39c869ac315
+jens,ReadOnly,,0fb73bcb76e0253d5c1c938ef249e3d2f35b8e514b9dd787c7c2da963721f3b9

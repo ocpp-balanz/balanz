@@ -32,6 +32,10 @@ $(model_dir)/chargers.csv:
 	@echo "Establishing chargers.csv file .."
 	@$(copy) $(call FixPath,$(model_dir)/chargers-orig.csv) $(call FixPath,$(model_dir)/chargers.csv)
 
+$(model_dir)/users.csv:
+	@echo "Establishing users.csv file .."
+	@$(copy) $(call FixPath,$(model_dir)/users-orig.csv) $(call FixPath,$(model_dir)/users.csv)
+
 model_init: $(model_dir)/chargers.csv
 
 update: .install-poetry

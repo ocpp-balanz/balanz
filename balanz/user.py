@@ -15,9 +15,8 @@ logger = logging.getLogger("user")
 
 class UserType(StrEnum):
     """User types."""
-    status_only = "StatusOnly"
-    status_and_priority = "StatusAndPriority"
-    readonly = "ReadOnly"
+    read_only = "ReadOnly"
+    tag_priority = "TagsPriority"
     admin = "Admin"
 
 # Forward declaration
@@ -35,14 +34,31 @@ class User:
     # Static dictionary of Sessions. Key is a generated session_id.
     user_list: dict[User] = {}
 
-    def __init__(self, user_id: str, password: str = None, user_type: UserType = UserType.status_only, auth_sha: str = None) -> None:
-        """Can also be used to update password. If auth_sha is None and password is given"""
+    def __init__(self, user_id: str, password: str = None, user_type: UserType = UserType.read_only, description: str = "", auth_sha: str = None) -> None:
+        """Init"""
         self.user_id: str = user_id
         self.auth_sha: str = auth_sha
+        self.description: str = description
         self.user_type: UserType = user_type
         if auth_sha is None and password is not None:
             self.auth_sha = gen_sha_256(user_id + password)
-        User.user_list[self.user_id] = self
+        # Ignore if already there
+        if self.user_id not in User.user_list:
+            User.user_list[self.user_id] = self
+
+    def update(self, password: str = None, user_type: UserType = None, description: str = None) -> None:
+        """Update specified values on an existing user"""
+        if password is not None:
+            self.auth_sha = gen_sha_256(self.user_id + password)
+        if user_type is not None:
+            self.user_type = user_type
+        if description is not None:
+            self.description = description
+
+    def external(self) -> str:
+        fields = ["user_id", "user_type", "description"]
+        result = {k: self.__dict__[k] for k in fields}
+        return result
 
     @staticmethod
     def check_auth(auth: str) -> UserType:
@@ -53,6 +69,7 @@ class User:
        logger.info(f"Checking auth {auth_sha} against stored shas")
        for user in User.user_list.values():
            if user.auth_sha == auth_sha:
+               logger.info(f"Successful auth check. User type {user.user_type}")
                return user.user_type
        return None
 
@@ -74,6 +91,7 @@ class User:
                     User(
                         user_id=user["user_id"],
                         user_type=user["user_type"],
+                        description=user["description"],
                         auth_sha=user["auth_sha"]
                     )
 
@@ -87,6 +105,7 @@ class User:
                 [
                     "user_id",
                     "user_type",
+                    "description",
                     "auth_sha"
                 ]
             )
@@ -97,6 +116,7 @@ class User:
                     [
                         user.user_id,
                         user.user_type,
+                        user.description,
                         user.auth_sha
                     ]
                 )

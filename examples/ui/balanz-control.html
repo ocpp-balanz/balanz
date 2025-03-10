@@ -42,6 +42,10 @@
       <option value="None"></option>
       <option value="GetStatus">GetStatus</option>
       <option value="SetBalanzState">SetBalanzState</option>
+      <option value="GetUsers">GetUsers</option>
+      <option value="CreateUser">CreateUser</option>
+      <option value="UpdateUser">UpdateUser</option>
+      <option value="DeleteUser">DeleteUser</option>
       <option value="GetGroups">GetGroups</option>
       <option value="ReloadGroups">ReloadGroups</option>
       <option value="WriteGroups">WriteGroups</option>
@@ -112,6 +116,14 @@
         args = '{}';
       } else if (command == "SetBalanzState") {
         args = '{"suspend": true, "group_id": "group_id"}';
+      } else if (command == "GetUsers") {
+        args = '{}'
+      } else if (command == "CreateUser") {
+        args = '{"user_id": "user_id", "password": "password", "description": "description", "user_type": "admin"}'
+      } else if (command == "UpdateUser") {
+        args = '{"user_id": "user_id", "password": "password", "description": "description", "user_type": "admin"}'
+      } else if (command == "DeleteUser") {
+        args = '{"user_id": "user_id"}'
       } else if (command == "GetGroups") {
         args = '{"charger_details": false}'
       } else if (command == "ReloadGroups") {

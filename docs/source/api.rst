@@ -51,6 +51,18 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``SetBalanzState``
      - ``group_id, suspend`` (True or False)
      - Suspend or resume balanz() for an allocation group
+   * - ``GetUsers``
+     - (None)
+     - Returns all users
+   * - ``CreateUser``
+     - ``user_id, user_type, description, password``
+     - Create new user. User type must be one of "ReadOnly", "TagPriority", or "Admin"
+   * - ``UpdateUser``
+     - ``user_id, user_type, description, password``
+     - Update user. User type must be one of "ReadOnly", "TagPriority", or "Admin"
+   * - ``DeleteUser``
+     - ``user_id``
+     - Delete user
    * - ``GetGroups``
      - (None)
      - Returns full group structure
