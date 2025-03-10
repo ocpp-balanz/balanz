@@ -180,7 +180,7 @@ class Session:
         duration: float,
         energy_meter: float,
         session_id: str,
-        completed: bool = True
+        completed: bool = True,
     ) -> None:
         # Copy relevant fields from Transaction
         self.charger_id: str = charger_id
@@ -205,7 +205,7 @@ class Session:
             Session.session_list[self.session_id] = self
 
     @classmethod
-    def from_transition(
+    def from_transaction(
         cls,
         trans: Transaction,
         meter_stop: int,
@@ -236,14 +236,15 @@ class Session:
 
         # Write to CSV file if registered
         if Session.session_writer:
+
             def format_history(ch: ChargingHistory) -> string:
                 result: string = time_str(ch.timestamp) + "="
                 if ch.offered is not None:
-                    result += f'{ch.offered}A'
-                result += '/'
+                    result += f"{ch.offered}A"
+                result += "/"
                 if ch.usage is not None:
                     result += f"{ch.usage}A"
-                return result                    
+                return result
 
             history = ""
             if self.charging_history:
@@ -268,7 +269,7 @@ class Session:
         logger.info(f"Created session {self.session_id} for connector {self.charger_id}/{self.connector_id}")
 
     @classmethod
-    def from_live_transition(
+    def from_live_transaction(
         cls,
         trans: Transaction,
     ) -> Session:
@@ -290,8 +291,8 @@ class Session:
             stop_id_tag=trans.id_tag,
             reason=None,
             duration=None,
-            energy_meter=trans.enery_meter,
-            complete = False
+            energy_meter=trans.energy_meter,
+            completed=False,
         )
         return self
 
@@ -312,14 +313,14 @@ class Session:
             duration=0,  # TODO
             energy_meter=float(session["energy"]) * 1000.0,
             reason=session["stop_reason"],
-            charging_history=[],  
+            charging_history=[],
             meter_stop=float(session["energy"]) * 1000.0,
         )
 
         # Charging history
         for ch in session["history"].split(";"):
             [timestamp, values] = ch.split("=")
-            if not '/' in values:
+            if not "/" in values:
                 # old format, only offered
                 offered = float(values[:-1])
                 usage = None
@@ -782,7 +783,7 @@ class Charger:
         # Charging history
         if connector.transaction is not None:
             connector.transaction.charging_history.append(
-                ChargingHistory(timestamp=time.time(), offered=connector.offered, usage = None)
+                ChargingHistory(timestamp=time.time(), offered=connector.offered, usage=None)
             )
         logger.debug(f"Charge change done {charge_change}.")
 
@@ -911,7 +912,7 @@ class Charger:
         connector.transaction.charging_history.append(ChargingHistory(timestamp=timestamp, offered=0, usage=0))
 
         # Make Session object
-        Session.from_transition(
+        Session.from_transaction(
             connector.transaction,
             meter_stop=meter_stop,
             timestamp=timestamp,
@@ -1037,14 +1038,16 @@ class Charger:
         # If in review usage_meter for new max
         connector.update_recent_usage(usage=usage_meter, timestamp=timestamp)
 
-        # Update charging history (if change is significant) 
+        # Update charging history (if change is significant)
         last_usage = None
         for ch in reversed(connector.transaction.charging_history):
             if ch.usage != None:
                 last_usage = ch.usage
                 break
         if last_usage is None or abs(last_usage - usage_meter) >= config.getfloat("history", "minimum_usage_change"):
-            connector.transaction.charging_history.append(ChargingHistory(timestamp=timestamp, offered=None, usage=usage_meter))
+            connector.transaction.charging_history.append(
+                ChargingHistory(timestamp=timestamp, offered=None, usage=usage_meter)
+            )
 
 
 class Group:

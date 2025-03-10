@@ -94,8 +94,8 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - ``id_tag``
      - Delete a tag
    * - ``GetSessions``
-     - ``charger_id, group_id``
-     - Returns all historic sessions matching filter
+     - ``charger_id, group_id, include_live`` (default: ``false``)
+     - Returns all historic sessions matching filter, optionally including live sessions
    * - ``GetSessions``
      - (None)
      - Returns CSV file (as one long text string) with all historic sessions

@@ -367,15 +367,18 @@ async def api_handler(websocket):
                         charger_list = [c.charger_id for c in Charger.charger_list.values() if c.is_in_group(group_id)]
                     elif charger_id:
                         charger_list = [charger_id]
-                    sessions = [
-                        s for s in Session.session_list.values() if charger_list is None or s.charger_id in charger_list
-                    ]
+                    else:
+                        charger_list = list(Charger.charger_list.keys())
+                    sessions = [s for s in Session.session_list.values() if s.charger_id in charger_list]
                     if include_live:
-                        transaction_list = [conn.transaction  for charger in charger_list for conn in charger.connectors.values() if conn.transaction is not None]
-                        logger.info(f"{transaction_list}")
-                        sessions.extend(
-                            [Session.from_live_transaction(conn.transaction) for charger in charger_list for conn in charger.connectors.values() if conn.transaction is not None]
-                        )
+                        transaction_list = [
+                            conn.transaction
+                            for charger in Charger.charger_list.values()
+                            if charger.charger_id in charger_list
+                            for conn in charger.connectors.values()
+                            if conn.transaction is not None
+                        ]
+                        sessions.extend([Session.from_live_transaction(trans) for trans in transaction_list])
                     result = [MessageType.CallResult, message_id, [s.external() for s in sessions]]
                 elif not result and command == "GetCSVSessions":
                     csv_file = open(config["history"]["session_csv"], mode="r")
