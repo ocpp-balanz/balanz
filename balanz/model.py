@@ -180,6 +180,7 @@ class Session:
         duration: float,
         energy_meter: float,
         session_id: str,
+        completed: bool = True
     ) -> None:
         # Copy relevant fields from Transaction
         self.charger_id: str = charger_id
@@ -199,8 +200,9 @@ class Session:
         self.energy_meter: float = energy_meter
         self.session_id: str = session_id
 
-        # Insert to the charging session list
-        Session.session_list[self.session_id] = self
+        # If completed, insert to the charging session list
+        if completed:
+            Session.session_list[self.session_id] = self
 
     @classmethod
     def from_transition(
@@ -264,6 +266,34 @@ class Session:
                 ]
             )
         logger.info(f"Created session {self.session_id} for connector {self.charger_id}/{self.connector_id}")
+
+    @classmethod
+    def from_live_transition(
+        cls,
+        trans: Transaction,
+    ) -> Session:
+        session_id = trans.charger_id + "-" + datetime.fromtimestamp(trans.start_time).strftime("%Y-%m-%d-%H:%M:%S")
+
+        self = cls(
+            session_id=session_id,
+            charger_id=trans.charger_id,
+            charger_alias=Charger.charger_list[trans.charger_id].alias,
+            group_id=Charger.charger_list[trans.charger_id].group_id,
+            connector_id=trans.connector_id,
+            id_tag=trans.id_tag,
+            user_name=trans.user_name,
+            meter_start=trans.meter_start,
+            start_time=trans.start_time,
+            charging_history=trans.charging_history,
+            meter_stop=trans.energy_meter,
+            end_time=None,
+            stop_id_tag=trans.id_tag,
+            reason=None,
+            duration=None,
+            energy_meter=trans.enery_meter,
+            complete = False
+        )
+        return self
 
     @classmethod
     def from_csv(cls, session) -> None:
