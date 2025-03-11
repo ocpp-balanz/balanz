@@ -104,9 +104,6 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``ReloadTags``
      - (None)
      - Reread tags from CSV file
-   * - ``WriteTags``
-     - (None)
-     - Write tags to CSV file
    * - ``UpdateTag``
      - ``id_tag, user_name, parent_id_tag, description, status, priority``
      - Update existing tag. Updates specified field(s). status can be ``Activated`` or ``Blocked``

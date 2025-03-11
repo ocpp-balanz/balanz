@@ -35,7 +35,7 @@ logger = logging.getLogger("api")
 API_ALLOW = {}
 API_ALLOW[UserType.status] = ["GetGroups", "GetChargers"]
 API_ALLOW[UserType.analysis] = API_ALLOW[UserType.status] + ["GetTags", "DrawAll", "GetSessions"]
-API_ALLOW[UserType.priority_and_status] = API_ALLOW[UserType.status] + ["SetChargePriority"]
+API_ALLOW[UserType.session_priority] = API_ALLOW[UserType.status] + ["SetChargePriority"]
 API_ALLOW[UserType.tag] = API_ALLOW[UserType.analysis] + ["SetChargePriority", "WriteTags", "UpdateTag", "CreateTag", "DeleteTag"]
 # Admin is just everything, no need to mention
 
@@ -204,13 +204,6 @@ async def api_handler(websocket):
                         message_id,
                         {"status": "Accepted"},
                     ]
-                elif not result and command == "WriteGroups":
-                    Group.write_csv(config["model"]["groups_csv"])
-                    result = [
-                        MessageType.CallResult,
-                        message_id,
-                        {"status": "Accepted"},
-                    ]
                 elif not result and command == "UpdateGroup":
                     group_id = payload.get("group_id", None)
                     description = payload.get("description", None)
@@ -229,6 +222,7 @@ async def api_handler(websocket):
                         ]
                     else:
                         Group.group_list[group_id].update(description=description, max_allocation=max_allocation)
+                        Group.write_csv(config["model"]["groups_csv"])
                         result = [
                             MessageType.CallResult,
                             message_id,
@@ -250,13 +244,6 @@ async def api_handler(websocket):
                     result = [MessageType.CallResult, message_id, [c.external() for c in chargers]]
                 elif not result and command == "ReloadChargers":
                     Charger.read_csv(config["model"]["chargers_csv"])
-                    result = [
-                        MessageType.CallResult,
-                        message_id,
-                        {"status": "Accepted"},
-                    ]
-                elif not result and command == "WriteChargers":
-                    Charger.write_csv(config["model"]["chargers_csv"])
                     result = [
                         MessageType.CallResult,
                         message_id,
@@ -284,6 +271,7 @@ async def api_handler(websocket):
                         Charger.charger_list[charger_id].update(
                             alias=alias, priority=priority, description=description, conn_max=conn_max
                         )
+                        Charger.write_csv(config["model"]["chargers_csv"])
                         result = [
                             MessageType.CallResult,
                             message_id,
@@ -293,13 +281,6 @@ async def api_handler(websocket):
                     result = [MessageType.CallResult, message_id, [t.external() for t in Tag.tag_list.values()]]
                 elif not result and command == "ReloadTags":
                     Tag.read_csv(config["model"]["tags_csv"])
-                    result = [
-                        MessageType.CallResult,
-                        message_id,
-                        {"status": "Accepted"},
-                    ]
-                elif not result and command == "WriteTags":
-                    Tag.write_csv(config["model"]["tags_csv"])
                     result = [
                         MessageType.CallResult,
                         message_id,
@@ -334,6 +315,7 @@ async def api_handler(websocket):
                             status=status,
                             priority=priority,
                         )
+                        Tag.write_csv(config["model"]["tags_csv"])
                         result = [
                             MessageType.CallResult,
                             message_id,
@@ -369,6 +351,7 @@ async def api_handler(websocket):
                             status=status,
                             priority=priority,
                         )
+                        Tag.write_csv(config["model"]["tags_csv"])
                         result = [
                             MessageType.CallResult,
                             message_id,
@@ -392,6 +375,7 @@ async def api_handler(websocket):
                         ]
                     else:
                         del Tag.tag_list[id_tag]
+                        Tag.write_csv(config["model"]["tags_csv"])
                         result = [
                             MessageType.CallResult,
                             message_id,
