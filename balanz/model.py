@@ -827,13 +827,13 @@ class Charger:
                     ]
                     logger.debug(f"running_id_tags: {running_id_tags}")
                     if id_tag in running_id_tags:
-                        logger.info("authorize. Rejecting as tag already used in another transaction.")
+                        logger.info(f"Authorize on {self.charger_id}. Rejecting as tag already used in another transaction.")
                         return IdTagInfo(status=AuthorizationStatus.concurrent_tx)
 
-                logger.info(f"authorize. Accepting tag {tag.id_tag}. Parent_id is {tag.parent_id_tag}")
+                logger.info(f"Authorize on {self.charger_id}. Accepting tag {tag.id_tag}. Parent_id is {tag.parent_id_tag}")
                 return IdTagInfo(status=AuthorizationStatus.accepted, parent_id_tag=tag.parent_id_tag)
             else:
-                logger.warning(f"authorize. Rejecting tag {tag.id_tag} as in state {tag.status}")
+                logger.warning(f"Authorize on {self.charger_id}. Rejecting tag {tag.id_tag} as in state {tag.status}")
                 return IdTagInfo(status=AuthorizationStatus.blocked)
 
     def start_transaction(self, connector_id: int, id_tag: str, meter_start: int, timestamp: float) -> int:
