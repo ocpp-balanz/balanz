@@ -1368,8 +1368,26 @@ class Group:
         # For full reduction because the connector is in SuspendedEV state, observe a configurable timeout before
         # making that decision (see comments above.)
         for conn in [c for c in connectors if not c._bz_done]:
+            # Charging below threshold - suspend part
+            if conn.status == ChargePointStatus.charging and conn.get_max_recent_usage() < config.getfloat(
+                "balanz", "usage_threshold"
+            ):
+                if conn._bz_last_offer_time is not None and time.time() - conn._bz_last_offer_time > config.getint(
+                    "balanz", "suspended_allocation_timeout"
+                ):
+                    # Remove allocation and set suspend time.
+                    conn._bz_allocation = 0
+                    conn._bz_done = True
+
+                    conn._bz_suspend_until = time.time() + config.getint("balanz", "suspended_delayed_time_not_first")
+                    logger.debug(
+                        f"balanz: EV suspended due t charing below threshold. No allocation for {conn.id_str()}. Suspend until "
+                        f"{time_str(conn._bz_suspend_until)}"
+                    )
+                else:
+                    logger.debug(f"allowing continued allocation for suspended EV for now. {conn.id_str()}")
             # SuspendedEV case - suspend part
-            if conn.status == ChargePointStatus.suspended_ev and conn.get_max_recent_usage() < config.getfloat(
+            elif conn.status == ChargePointStatus.suspended_ev and conn.get_max_recent_usage() < config.getfloat(
                 "balanz", "usage_threshold"
             ):
                 if conn._bz_last_offer_time is not None and time.time() - conn._bz_last_offer_time > config.getint(
