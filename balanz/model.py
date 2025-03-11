@@ -234,14 +234,15 @@ class Session:
 
         # Write to CSV file if registered
         if Session.session_writer:
+
             def format_history(ch: ChargingHistory) -> string:
                 result: string = time_str(ch.timestamp) + "="
                 if ch.offered is not None:
-                    result += f'{ch.offered}A'
-                result += '/'
+                    result += f"{ch.offered}A"
+                result += "/"
                 if ch.usage is not None:
                     result += f"{ch.usage}A"
-                return result                    
+                return result
 
             history = ""
             if self.charging_history:
@@ -282,14 +283,14 @@ class Session:
             duration=0,  # TODO
             energy_meter=float(session["energy"]) * 1000.0,
             reason=session["stop_reason"],
-            charging_history=[],  
+            charging_history=[],
             meter_stop=float(session["energy"]) * 1000.0,
         )
 
         # Charging history
         for ch in session["history"].split(";"):
             [timestamp, values] = ch.split("=")
-            if not '/' in values:
+            if not "/" in values:
                 # old format, only offered
                 offered = float(values[:-1])
                 usage = None
@@ -752,7 +753,7 @@ class Charger:
         # Charging history
         if connector.transaction is not None:
             connector.transaction.charging_history.append(
-                ChargingHistory(timestamp=time.time(), offered=connector.offered, usage = None)
+                ChargingHistory(timestamp=time.time(), offered=connector.offered, usage=None)
             )
         logger.debug(f"Charge change done {charge_change}.")
 
@@ -1007,14 +1008,16 @@ class Charger:
         # If in review usage_meter for new max
         connector.update_recent_usage(usage=usage_meter, timestamp=timestamp)
 
-        # Update charging history (if change is significant) 
+        # Update charging history (if change is significant)
         last_usage = None
         for ch in reversed(connector.transaction.charging_history):
             if ch.usage != None:
                 last_usage = ch.usage
                 break
         if last_usage is None or abs(last_usage - usage_meter) >= config.getfloat("history", "minimum_usage_change"):
-            connector.transaction.charging_history.append(ChargingHistory(timestamp=timestamp, offered=None, usage=usage_meter))
+            connector.transaction.charging_history.append(
+                ChargingHistory(timestamp=timestamp, offered=None, usage=usage_meter)
+            )
 
 
 class Group:
@@ -1335,8 +1338,26 @@ class Group:
         # For full reduction because the connector is in SuspendedEV state, observe a configurable timeout before
         # making that decision (see comments above.)
         for conn in [c for c in connectors if not c._bz_done]:
+            # Charging below threshold - suspend part
+            if conn.status == ChargePointStatus.charging and conn.get_max_recent_usage() < config.getfloat(
+                "balanz", "usage_threshold"
+            ):
+                if conn._bz_last_offer_time is not None and time.time() - conn._bz_last_offer_time > config.getint(
+                    "balanz", "suspended_allocation_timeout"
+                ):
+                    # Remove allocation and set suspend time.
+                    conn._bz_allocation = 0
+                    conn._bz_done = True
+
+                    conn._bz_suspend_until = time.time() + config.getint("balanz", "suspended_delayed_time_not_first")
+                    logger.debug(
+                        f"balanz: EV suspended due t charing below threshold. No allocation for {conn.id_str()}. Suspend until "
+                        f"{time_str(conn._bz_suspend_until)}"
+                    )
+                else:
+                    logger.debug(f"allowing continued allocation for suspended EV for now. {conn.id_str()}")
             # SuspendedEV case - suspend part
-            if conn.status == ChargePointStatus.suspended_ev and conn.get_max_recent_usage() < config.getfloat(
+            elif conn.status == ChargePointStatus.suspended_ev and conn.get_max_recent_usage() < config.getfloat(
                 "balanz", "usage_threshold"
             ):
                 if conn._bz_last_offer_time is not None and time.time() - conn._bz_last_offer_time > config.getint(
