@@ -23,7 +23,7 @@ class UserType(StrEnum):
     analysis = "Analysis"
 
     # Overwrite session priority
-    priority_and_status = "SessionPriority"
+    session_priority = "SessionPriority"
 
     # Maintain tags
     tag = "Tags"
@@ -78,11 +78,11 @@ class User:
        
        Returns user_type or None if no match found."""
        auth_sha: str = gen_sha_256(auth)
-       logger.info(f"Checking auth {auth_sha} against stored shas")
        for user in User.user_list.values():
            if user.auth_sha == auth_sha:
-               logger.info(f"Successful auth check. User type {user.user_type}")
+               logger.info(f"Successful auth check. User {user.user_id}, type {user.user_type}")
                return user.user_type
+       logger.info(f"Failed auth check {auth_sha}")
        return None
 
     @staticmethod
