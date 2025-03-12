@@ -1575,21 +1575,12 @@ class Group:
             # Determine the connectors at this priority
             conn_priority = [c for c in connectors if c.conn_priority() == priority and not c._bz_done]
 
-            # Confirm the minimum for as many running connectors as possible. Do not NOT set done flag, unless no room
-            for conn in [
-                c for c in conn_priority if c.offered > 0 and c._bz_max >= config.getfloat("balanz", "min_allocation")
-            ]:
-                if remain_allocation >= config.getfloat("balanz", "min_allocation"):
-                    # It will fit, let's do it
-                    conn._bz_allocation = config.getfloat("balanz", "min_allocation")
-                    remain_allocation -= config.getfloat("balanz", "min_allocation")
-                else:
-                    conn._bz_allocation = 0
-                    conn._bz_done = True
+            # Sort (priority) connectors by energy received so far in order distribute fairly
+            conn_priority.sort(key=lambda c: c.transaction.energy_meter)
 
-            # Next, start further sessions as long as there is room. Do not set done flag, unless no room
+            # Confirm the minimum for as many connectors as possible. Do not NOT set done flag, unless no room
             for conn in [
-                c for c in conn_priority if c.offered == 0 and c._bz_max >= config.getfloat("balanz", "min_allocation")
+                c for c in conn_priority if c._bz_max >= config.getfloat("balanz", "min_allocation")
             ]:
                 if remain_allocation >= config.getfloat("balanz", "min_allocation"):
                     # It will fit, let's do it
@@ -1606,6 +1597,8 @@ class Group:
                 # logger.debug(f'  Allocation in round-robin: remain={remain_allocation}')
                 allocation_in_round = False
                 for conn in conn_priority:
+                    if conn._bz_done:
+                        continue
                     if conn._bz_allocation >= conn._bz_max:
                         # At max, done
                         conn._bz_done = True
