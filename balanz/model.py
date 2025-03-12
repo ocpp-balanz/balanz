@@ -1029,7 +1029,7 @@ class Charger:
         )
         if offered is not None:
             if offered != connector.offered:
-                logger.warning(
+                logger.info(
                     f"Connector {self.charger_id}/{connector_id} reported offer {offered} which is different to "
                     f"expected {connector.offered}. Adjusting it."
                 )
