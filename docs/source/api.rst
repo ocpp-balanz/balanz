@@ -86,9 +86,6 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``ReloadGroups``
      - (None)
      - Rereads groups from CSV file
-   * - ``WriteGroups``
-     - (None)
-     - Write groups to CSV file
    * - ``UpdateGroup``
      - ``group_id, description, max_allocation``
      - Update existing group. Updates specified field(s)
@@ -98,9 +95,6 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``ReloadChargers``
      - (None)
      - Rereads chargers from CSV file
-   * - ``WriteChargers``
-     - (None)
-     - Write chargers from CSV file
    * - ``UpdateCharger``
      - ``charger_id, alias, priority, description, conn_max``
      - Update existing charger. Updates specified field(s)
