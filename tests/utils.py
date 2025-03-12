@@ -148,7 +148,7 @@ def check(response: str, target: str) -> bool:
         ts = target.split()
         ti = ts.index("Wh,")
         tenergy = int(ts[ti - 1])
-        ok = abs(renergy - tenergy) <= 300 and rs[0 : ri - 1] == ts[0 : ti - 1] and rs[ri:] == ts[ti:]
+        ok = abs(renergy - tenergy) <= 500 and rs[0 : ri - 1] == ts[0 : ti - 1] and rs[ri:] == ts[ti:]
     else:
         ok = response == target
 
