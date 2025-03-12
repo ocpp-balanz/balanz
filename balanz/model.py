@@ -1355,7 +1355,7 @@ class Group:
                         f"{time_str(conn._bz_suspend_until)}"
                     )
                 else:
-                    logger.debug(f"allowing continued allocation for suspended EV for now. {conn.id_str()}")
+                    logger.debug(f"allowing continued allocation for charging EV for now. {conn.id_str()}")
             # SuspendedEV case - suspend part
             elif conn.status == ChargePointStatus.suspended_ev and conn.get_max_recent_usage() < config.getfloat(
                 "balanz", "usage_threshold"
@@ -1390,7 +1390,9 @@ class Group:
                         f"{time_str(conn._bz_suspend_until)}"
                     )
                 else:
-                    logger.debug(f"allowing continued allocation for suspended EV for now. {conn.id_str()}")
+                    logger.debug(f"allowing continued minimum allocation for suspended EV for now. {conn.id_str()}")
+                    conn._bz_allocation = config.getfloat("balanz", "min_allocation")
+                    conn._bz_done = True
             # SuspendedEVSE / stay suspended case
             elif (
                 conn.status == ChargePointStatus.suspended_evse
