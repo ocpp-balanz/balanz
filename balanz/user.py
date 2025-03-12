@@ -7,17 +7,20 @@ Users will be stored in a CSV file along with a sha256 hash of their login (user
 import csv
 import logging
 from enum import StrEnum
+
 from config import config
 from util import gen_sha_256
 
 # Logging setup
 logger = logging.getLogger("user")
 
+
 class UserType(StrEnum):
     """User types.
-     
+
     A user type combines the available API methods with the available UI screens/focus.
     """
+
     # ReadOnly types:
     status = "Status"
     analysis = "Analysis"
@@ -31,9 +34,11 @@ class UserType(StrEnum):
     # Everything
     admin = "Admin"
 
+
 # Forward declaration
 class User:
     pass
+
 
 # ---------------------------
 # Classes - Implementation
@@ -46,7 +51,14 @@ class User:
     # Static dictionary of Sessions. Key is a generated session_id.
     user_list: dict[User] = {}
 
-    def __init__(self, user_id: str, password: str = None, user_type: UserType = None, description: str = "", auth_sha: str = None) -> None:
+    def __init__(
+        self,
+        user_id: str,
+        password: str = None,
+        user_type: UserType = None,
+        description: str = "",
+        auth_sha: str = None,
+    ) -> None:
         """Init"""
         self.user_id: str = user_id
         self.auth_sha: str = auth_sha
@@ -74,16 +86,16 @@ class User:
 
     @staticmethod
     def check_auth(auth: str) -> UserType:
-       """Check auth (typically user_id and password concatenated) against stored sha. 
-       
-       Returns user_type or None if no match found."""
-       auth_sha: str = gen_sha_256(auth)
-       for user in User.user_list.values():
-           if user.auth_sha == auth_sha:
-               logger.info(f"Successful auth check. User {user.user_id}, type {user.user_type}")
-               return user.user_type
-       logger.info(f"Failed auth check {auth_sha}")
-       return None
+        """Check auth (typically user_id and password concatenated) against stored sha.
+
+        Returns user_type or None if no match found."""
+        auth_sha: str = gen_sha_256(auth)
+        for user in User.user_list.values():
+            if user.auth_sha == auth_sha:
+                logger.info(f"Successful auth check. User {user.user_id}, type {user.user_type}")
+                return user.user_type
+        logger.info(f"Failed auth check {auth_sha}")
+        return None
 
     @staticmethod
     def read_csv(file: str) -> None:
@@ -104,7 +116,7 @@ class User:
                         user_id=user["user_id"],
                         user_type=user["user_type"],
                         description=user["description"],
-                        auth_sha=user["auth_sha"]
+                        auth_sha=user["auth_sha"],
                     )
 
     @staticmethod
@@ -113,31 +125,8 @@ class User:
         logger.info(f"Writing users to {file}")
         with open(file, mode="w", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow(
-                [
-                    "user_id",
-                    "user_type",
-                    "description",
-                    "auth_sha"
-                ]
-            )
+            writer.writerow(["user_id", "user_type", "description", "auth_sha"])
             user: User = None
             for u in User.user_list:
                 user = User.user_list[u]
-                writer.writerow(
-                    [
-                        user.user_id,
-                        user.user_type,
-                        user.description,
-                        user.auth_sha
-                    ]
-                )
-
-
-
-
-
-
-
-
-
+                writer.writerow([user.user_id, user.user_type, user.description, user.auth_sha])

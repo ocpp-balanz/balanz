@@ -41,6 +41,7 @@
       <select id="command" onchange="set_default_args()">
       <option value="None"></option>
       <option value="GetStatus">GetStatus</option>
+      <option value="SetConfig">SetConfig</option>
       <option value="SetBalanzState">SetBalanzState</option>
       <option value="GetUsers">GetUsers</option>
       <option value="CreateUser">CreateUser</option>
@@ -111,6 +112,8 @@
         args = ""
       } else if (command == "GetStatus") {
         args = '{}';
+      } else if (command == "SetConfig") {
+        args = '{"section": "section", "key": "key", "value": "value"}';
       } else if (command == "SetBalanzState") {
         args = '{"suspend": true, "group_id": "group_id"}';
       } else if (command == "GetUsers") {

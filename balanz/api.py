@@ -14,7 +14,6 @@ import websockets.asyncio
 import websockets.asyncio.server
 from config import config
 from model import Charger, Group, Session, Tag
-from user import User, UserType
 from ocpp.messages import MessageType
 from ocpp.v16 import call_result
 from ocpp.v16.enums import (
@@ -26,8 +25,8 @@ from ocpp.v16.enums import (
     ResetType,
     TriggerMessageStatus,
 )
+from user import User, UserType
 from util import gen_sha_256, time_str
-from user import UserType
 
 logger = logging.getLogger("api")
 
@@ -36,8 +35,15 @@ API_ALLOW = {}
 API_ALLOW[UserType.status] = ["GetGroups", "GetChargers"]
 API_ALLOW[UserType.analysis] = API_ALLOW[UserType.status] + ["GetTags", "DrawAll", "GetSessions"]
 API_ALLOW[UserType.session_priority] = API_ALLOW[UserType.status] + ["SetChargePriority"]
-API_ALLOW[UserType.tag] = API_ALLOW[UserType.analysis] + ["SetChargePriority", "WriteTags", "UpdateTag", "CreateTag", "DeleteTag"]
+API_ALLOW[UserType.tag] = API_ALLOW[UserType.analysis] + [
+    "SetChargePriority",
+    "WriteTags",
+    "UpdateTag",
+    "CreateTag",
+    "DeleteTag",
+]
 # Admin is just everything, no need to mention
+
 
 async def api_handler(websocket):
     """Handler for the API"""
@@ -68,7 +74,12 @@ async def api_handler(websocket):
                     result = [MessageType.CallError, message_id, {"status": "NotAuthorized"}]
 
                 # Ensure that logged in user is authorized to do the call.
-                if logged_in and command != "Login" and logged_in_user_type != UserType.admin and command not in API_ALLOW[logged_in_user_type]:
+                if (
+                    logged_in
+                    and command != "Login"
+                    and logged_in_user_type != UserType.admin
+                    and command not in API_ALLOW[logged_in_user_type]
+                ):
                     result = [MessageType.CallError, message_id, {"status": "NotAuthorized"}]
 
                 # Resolve charger alias for all calls quietly by adapting payload
@@ -150,6 +161,22 @@ async def api_handler(websocket):
                             },
                         },
                     ]
+                elif not result and command == "SetConfig":
+                    section = payload.get("section", None)
+                    key = payload.get("key", None)
+                    value = payload.get("value", None)
+
+                    if (
+                        section is None
+                        or key is None
+                        or value is None
+                        or section not in config
+                        or key not in config[section]
+                    ):
+                        result = [MessageType.CallError, message_id, "IllegalArguments"]
+                    else:
+                        config[section][key] = value
+                    result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
                 elif not result and command == "DrawAll":
                     historic = payload.get("historic", True)
                     drawing = drawmodel.draw_all(historic=historic)

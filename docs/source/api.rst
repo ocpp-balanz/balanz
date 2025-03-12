@@ -53,6 +53,12 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``GetStatus``
      - (None)
      - Returns balanz version and various status information.
+   * - ``SetConfig``
+     - ``section, key, value`` 
+     - Updates a balanz configuration setting live. Use carefully! Note, that the configuration is not saved to disk
+   * - ``GetConfig``
+     - (None)
+     - Returns the current balanz configuration
    * - ``DrawAll``
      - ``historic`` (default True)
      - Returns drawing of all groups, chargers, sessions, and states. Optionally omit charging history

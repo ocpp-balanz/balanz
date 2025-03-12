@@ -827,10 +827,14 @@ class Charger:
                     ]
                     logger.debug(f"running_id_tags: {running_id_tags}")
                     if id_tag in running_id_tags:
-                        logger.info(f"Authorize on {self.charger_id}. Rejecting as tag already used in another transaction.")
+                        logger.info(
+                            f"Authorize on {self.charger_id}. Rejecting as tag already used in another transaction."
+                        )
                         return IdTagInfo(status=AuthorizationStatus.concurrent_tx)
 
-                logger.info(f"Authorize on {self.charger_id}. Accepting tag {tag.id_tag}. Parent_id is {tag.parent_id_tag}")
+                logger.info(
+                    f"Authorize on {self.charger_id}. Accepting tag {tag.id_tag}. Parent_id is {tag.parent_id_tag}"
+                )
                 return IdTagInfo(status=AuthorizationStatus.accepted, parent_id_tag=tag.parent_id_tag)
             else:
                 logger.warning(f"Authorize on {self.charger_id}. Rejecting tag {tag.id_tag} as in state {tag.status}")
@@ -1579,9 +1583,7 @@ class Group:
             conn_priority.sort(key=lambda c: c.transaction.energy_meter)
 
             # Confirm the minimum for as many connectors as possible. Do not NOT set done flag, unless no room
-            for conn in [
-                c for c in conn_priority if c._bz_max >= config.getfloat("balanz", "min_allocation")
-            ]:
+            for conn in [c for c in conn_priority if c._bz_max >= config.getfloat("balanz", "min_allocation")]:
                 if remain_allocation >= config.getfloat("balanz", "min_allocation"):
                     # It will fit, let's do it
                     conn._bz_allocation = config.getfloat("balanz", "min_allocation")
