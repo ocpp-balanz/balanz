@@ -1,5 +1,5 @@
 group_id,description,max_allocation
-HQ,wow,00:00-23:59>0=100
+HQ,HQ Site,00:00-23:59>0=100
 RR1,Road Runner 1 Site,00:00-05:59>0=48;06:00-16:59>0=16:3=32:5=48;17:00-20:59>0=0:5=48;21:00-23:59>0=32:5=48
 RR2,Road Runner 2 Site,00:00-23:59>0=24:3=40:5=48
 Default,Default Group for autoregistered chargers,
