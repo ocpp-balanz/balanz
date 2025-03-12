@@ -17,8 +17,8 @@ A user type combines the available API methods with the available UI screens/foc
 
   - ``Status`` - API read-only access. UI only has status screen
   - ``Analysis`` - API read-only access. Screens available in read-only mode
-  - ``StatusAndPriority`` - As ``Status``, except possible to override session priority
-  - ``AnalysisAndTags`` - As ``Analysis``, ability to override session priority and maintain tags
+  - ``SessionPriority`` - As ``Status``, except possible to override session priority
+  - ``Tags`` - As ``Analysis``, ability to override session priority and maintain tags
   - ``Admin`` - All access
 
 The sha256 value of token specified in a list in the balanz configuration file.
