@@ -812,7 +812,7 @@ class Charger:
         id_tag = id_tag.upper()
         logger.debug(f"authorize. Checking tag {id_tag}")
         if id_tag not in Tag.tag_list:
-            logger.warning("authorize. Rejecting as tag not found")
+            logger.warning(f"Authorize on {self.charger_id}. Rejecting as tag {id_tag} not found")
             return IdTagInfo(status=AuthorizationStatus.invalid)
         else:
             tag: Tag = Tag.tag_list[id_tag]
