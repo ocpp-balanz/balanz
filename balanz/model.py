@@ -1580,7 +1580,7 @@ class Group:
             conn_priority = [c for c in connectors if c.conn_priority() == priority and not c._bz_done]
 
             # Sort (priority) connectors by energy received so far in order distribute fairly
-            conn_priority.sort(key=lambda c: c.transaction.energy_meter)
+            conn_priority.sort(key=lambda c: c.transaction.energy_meter if c.transaction is not None else 0)
 
             # Confirm the minimum for as many connectors as possible. Do not NOT set done flag, unless no room
             for conn in [c for c in conn_priority if c._bz_max >= config.getfloat("balanz", "min_allocation")]:
