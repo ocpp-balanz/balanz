@@ -29,15 +29,17 @@
 </head>
 <body>
   <h2>Balanz Charging Control</h2>
-  <div class="header">
+  <div class="Login">
     <label>Server URL</label>
-    <input id="url" size="50" value="ws://localhost:9999/api"/>
+    <input id="url" size="30" value="ws://localhost:9999/api" placeholder="Server URL"/>
+    <label>Login</label>
+    <input id="user" size="20" placeholder="User Name"/>
+    <label>Password</label>
+    <input id="password" size="20" type="password" placeholder="Password"/>
     <button id="connect" onclick="connect()">(Re)connect</button>
-    <button id="refresh" onclick="refresh()">Refresh</button>
-    <button id="auto_refresh" onclick="auto_refresh()">Auto Refresh (15s)</button>
-    <input type="checkbox" id="historic" name="historic" value=true checked> <label for="historic"> Including last 5 sessions</label><br>
   </div>
   <div class="header">
+    <label>Command</label>
       <select id="command" onchange="set_default_args()">
       <option value="None"></option>
       <option value="GetStatus">GetStatus</option>
@@ -76,12 +78,17 @@
     <input id="args" size="120"/>
     <button id="send" onclick="send()">Send</button>
   </div>
+  <div class="header">
+    <label>Status</label>
+    <button id="refresh" onclick="refresh()">Refresh</button>
+    <button id="auto_refresh" onclick="auto_refresh()">Auto Refresh (15s)</button>
+    <input type="checkbox" id="historic" name="historic" value=true> <label for="historic"> Include last 5 sessions</label><br>
+  </div>
   
   <textarea class="text" rows="40" id="model"></textarea>
   <script>
     var ws = null;
     var auto_id = null;
-    var token = "ti/4g2_";
     var button_background = document.getElementById("auto_refresh").style.backgroundColor;
 
     function gen_message_id() {
@@ -213,13 +220,13 @@
       };
 
       ws.onopen = () => {
-        var login_msg = [2, gen_message_id(), "Login", {"token": token}]
+        var login_msg = [2, gen_message_id(), "Login", {"token": document.getElementById("user").value + document.getElementById("password").value}]
+        console.log(login_msg);
         ws.send(JSON.stringify(login_msg));
         document.getElementById("connect").style.backgroundColor = '#90EE90';
         setTimeout(refresh, 1000);
       };
     }
-    connect();
   </script>
 </body>
 </html>
