@@ -221,7 +221,6 @@
 
       ws.onopen = () => {
         var login_msg = [2, gen_message_id(), "Login", {"token": document.getElementById("user").value + document.getElementById("password").value}]
-        console.log(login_msg);
         ws.send(JSON.stringify(login_msg));
         document.getElementById("connect").style.backgroundColor = '#90EE90';
         setTimeout(refresh, 1000);
