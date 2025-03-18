@@ -15,5 +15,6 @@ balanz documentation
    model
    configuration
    api
+   ui
    deployment
    glossary
