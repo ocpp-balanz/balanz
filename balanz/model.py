@@ -215,14 +215,22 @@ class Session:
     ) -> None:
         session_id = trans.charger_id + "-" + datetime.fromtimestamp(trans.start_time).strftime("%Y-%m-%d-%H:%M:%S")
 
+        # Logic for id_tag. If balanz was reset while the transaction was active, the id_tag and user name
+        # will have been lost.
+        id_tag = trans.id_tag
+        user_name = trans.user_name
+        if id_tag == "Unknown" and stop_id_tag is not None:
+            id_tag = stop_id_tag.upper()
+            user_name = Tag.tag_list[id_tag].user_name if id_tag in Tag.tag_list else "Unknown"
+
         self = cls(
             session_id=session_id,
             charger_id=trans.charger_id,
             charger_alias=Charger.charger_list[trans.charger_id].alias,
             group_id=Charger.charger_list[trans.charger_id].group_id,
             connector_id=trans.connector_id,
-            id_tag=trans.id_tag,
-            user_name=trans.user_name,
+            id_tag=id_tag,
+            user_name=user_name,
             meter_start=trans.meter_start,
             start_time=trans.start_time,
             charging_history=trans.charging_history,
