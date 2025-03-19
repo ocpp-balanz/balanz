@@ -54,6 +54,8 @@
       <option value="UpdateGroup">UpdateGroup</option>
       <option value="GetChargers">GetChargers</option>
       <option value="ReloadChargers">ReloadChargers</option>
+      <option value="CreateCharger">CreateCharger</option>
+      <option value="DeleteCharger">DeleteCharger</option>
       <option value="UpdateCharger">UpdateCharger</option>
       <option value="GetTags">GetTags</option>
       <option value="ReloadTags">ReloadTags</option>
@@ -141,6 +143,10 @@
         args = '{"group_id": "group_id", "charger_id": "charger_id"}'
       } else if (command == "ReloadChargers") {
         args = '{}'
+      } else if (command == "CreateCharger") {
+        args = '{"charger_id": "charger_id", "alias": "alias", "group_id": "group_id", "priority": 5, "description": "description", "conn_max": 16, "no_connectors": 1}';
+      } else if (command == "DeleteCharger") {
+        args = '{"charger_id": "charger_id"}';
       } else if (command == "UpdateCharger") {
         args = '{"charger_id": "charger_id", "alias": "alias", "priority": 5, "description": "description", "conn_max": 16}';
       } else if (command == "GetTags") {

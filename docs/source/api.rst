@@ -95,6 +95,12 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``ReloadChargers``
      - (None)
      - Rereads chargers from CSV file
+   * - ``CreateCharger``
+     - ``charger_id, alias, group_id, priority, description, conn_max, no_connectors``
+     - Creates a new charger into the specified group
+   * - ``DeleteCharger``
+     - ``charger_id``
+     - Deletes existing charger from the system
    * - ``UpdateCharger``
      - ``charger_id, alias, priority, description, conn_max``
      - Update existing charger. Updates specified field(s)

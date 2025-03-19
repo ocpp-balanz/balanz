@@ -276,6 +276,64 @@ async def api_handler(websocket):
                         message_id,
                         {"status": "Accepted"},
                     ]
+                elif not result and command == "CreateCharger":
+                    charger_id = payload.get("charger_id", None)
+                    alias = payload.get("alias", None)
+                    group_id = payload.get("group_id", None)
+                    priority = payload.get("priority", None)
+                    description = payload.get("description", None)
+                    no_connectors = payload.get("no_connectors", 1)
+                    conn_max = payload.get("conn_max", None)
+                    if charger_id is None or alias is None or group_id is None or group_id not in Group.group_list:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "IllegalArguments"},
+                        ]
+                    elif charger_id in Charger.charger_list:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "ChargerAlreadyExists"},
+                        ]
+                    else:
+                        Charger(
+                            charger_id=charger_id,
+                            alias=alias,
+                            group_id=group_id,
+                            description=description,
+                            conn_max=conn_max,
+                            priority=priority,
+                            no_connectors=no_connectors
+                        )
+                        Charger.write_csv(config["model"]["chargers_csv"])
+                        result = [
+                            MessageType.CallResult,
+                            message_id,
+                            {"status": "Accepted"},
+                        ]
+                elif not result and command == "DeleteCharger":
+                    charger_id = payload.get("charger_id", None)
+                    if charger_id is None:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "IllegalArguments"},
+                        ]
+                    elif charger_id not in Charger.charger_list:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "NoSuchCharger"},
+                        ]
+                    else:
+                        del Charger.charger_list[charger_id]
+                        Charger.write_csv(config["model"]["chargers_csv"])
+                        result = [
+                            MessageType.CallResult,
+                            message_id,
+                            {"status": "Accepted"},
+                        ]
                 elif not result and command == "UpdateCharger":
                     charger_id = payload.get("charger_id", None)
                     alias = payload.get("alias", None)
