@@ -9,11 +9,16 @@ This section will brief outdescribe the main elements on the UI which is otherwi
 The UI communicates with :term:`balanz` via the API, i.e. on the same web socket connection used by the chargers. The UI itself
 may be served by any standard web server. UI building and deployment is described in the repository ``README.md`` file.
 
+.. note::
+  As mentioned above, the UI does not give access to all API functions. Excluded are some low level application functions like
+  changing log levels, some low-level OCPP commands, etc. One way of performing these function is using very basic UI (single HTML
+  page) included in the ``examples`` folder in :term:`balanz`.
+
 
 Screens
 -------
 
-The UI starts out be displaying a Login screen as seen below. Upon :term:`balanz` installation, a default administrator user has been
+The UI starts out displaying a Login screen as shown below. Upon :term:`balanz` installation, a default administrator user has been
 created (user name ``admin`` and password ``admin``). This user should be deleted and new user(s) created.
 
 .. figure:: images/login.png
@@ -24,7 +29,7 @@ created (user name ``admin`` and password ``admin``). This user should be delete
   Login screen
 
 
-Once succesfully logged in, a toolbar appears on the top with access to 7 main screens. When logging in, the STATUS screen is 
+Once succesfully logged in a top toolbar appears giving access to 7 main screens. The STATUS screen is the default screen and will be 
 automatically selected.
 
 .. figure:: images/toolbar.png
@@ -35,11 +40,11 @@ automatically selected.
   Toolbar
 
 
-The screens are as follows:
+The screens are:
 
-  - STATUS - Shows the current status of all chargers, split by group, including their state, energy consumption, etc. Depending on 
-    user type, charging priority for a session may be changed, or the current session remotedly terminated.
-  - SESSIONS - Gives a tabular view of all completed sessions. Allows for filtering as well as CSV export.
+  - STATUS - Shows current status of all chargers, split by group, including their state, energy consumption, etc. Depending on 
+    user type, charging priority for a session may be changed and sessions remotedly terminated.
+  - SESSIONS - Gives a tabular view of completed sessions. Allows filtering and CSV export.
   - STATISTICS - Graphical statistical view on energy consumption per time (hoursly, daily, monthly). Filtering by group or even charger.
   - CHARGERS - Tabular view of all chargers. Details may be edited. Supports chargers reset.
   - GROUPS - Tabular view of groups. Details, including smart charging details, may be edited.
