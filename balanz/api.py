@@ -304,7 +304,7 @@ async def api_handler(websocket):
                             description=description,
                             conn_max=conn_max,
                             priority=priority,
-                            no_connectors=no_connectors
+                            no_connectors=no_connectors,
                         )
                         Charger.write_csv(config["model"]["chargers_csv"])
                         result = [

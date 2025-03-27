@@ -1457,24 +1457,16 @@ class Group:
                 and conn.get_max_recent_usage() <= conn.offered - config.getfloat("balanz", "margin_lower")
                 and conn.offered >= config.getfloat("balanz", "min_allocation")
                 and not (
-                    conn._bz_ev_max_usage is not None and ceil(conn.transaction.usage_meter) > conn._bz_ev_max_usage
+                    conn._bz_ev_max_usage is not None and ceil(conn.transaction.usage_meter) >= conn._bz_ev_max_usage
                 )
             ):
                 # Not using full offer (which is above the minimum), so can be reduced.
                 # Will be in effect for the rest of the transaction
-                conn._bz_allocation = ceil(conn.get_max_recent_usage())
-                if conn._bz_allocation < config.getfloat("balanz", "min_allocation"):
-                    # Do not to go below the minimum
-                    conn._bz_allocation = config.getfloat("balanz", "min_allocation")
-                conn._bz_done = True
-
-                # Don't go above this for remainder of session
-                if conn._bz_ev_max_usage is None or conn._bz_ev_max_usage > conn._bz_allocation:
-                    conn._bz_ev_max_usage = conn._bz_allocation
-                    logger.info(
-                        f"balanz: Due to EV lower usage, reducing alloc from {conn.offered} to {conn._bz_allocation}"
-                        f" for {conn.id_str()}"
-                    )
+                conn._bz_ev_max_usage = max(ceil(conn.get_max_recent_usage()), config.getfloat("balanz", "min_allocation"))
+                logger.info(
+                    f"balanz: Due to EV lower usage, reducing max alloc to {conn._bz_ev_max_usage}"
+                    f" for {conn.id_str()}"
+                )
 
         ############
         # Next, review all connectors asking for allocation and determine their max (desired) usage
