@@ -45,8 +45,8 @@ The screens are:
   - STATUS - Shows current status of all chargers, split by group, including their state, energy consumption, etc. Depending on 
     user type, charging priority for a session may be changed and sessions remotedly terminated.
   - SESSIONS - Gives a tabular view of completed sessions. Allows filtering and CSV export.
-  - STATISTICS - Graphical statistical view on energy consumption per time (hoursly, daily, monthly). Filtering by group or even charger.
-  - CHARGERS - Tabular view of all chargers. Details may be edited. Supports chargers reset.
+  - STATISTICS - Graphical statistical view of energy consumption over time (hoursly, daily, monthly). Filtering by group or even charger.
+  - CHARGERS - Tabular view of chargers. Details may be edited. Supports chargers reset.
   - GROUPS - Tabular view of groups. Details, including smart charging details, may be edited.
   - TAGS - Tabular view of all tags. Details may be edited and tages created or deleted.
   - USERS - User administration. Create, edit, delete.
@@ -61,7 +61,7 @@ Status Screen
 
 The status screen displays each group in `accordion` style, i.e. a box with basic information which can be expanded into a table showing each
 charger connector in its own row. For each group, basic information about the current total offered power (in A) vs. the available total
-is shown as gauge. This is followed by a split of connectors by their charging status.
+is shown as a gauge. This is followed by a split of connectors by their charging status.
 
 Referring to the example below (click to expand), the group ``RR2`` has been expanded to show its four chargers (each with a single connector). 
 Detailed information about charging status is presented along the columns. The table (like all tables in the UI) may be sorted
@@ -98,7 +98,7 @@ A separate button for CSV export is available above the table. This will downloa
   Sessions screen
 
 
-It is also possible to see the charging history by clicking on the appropriate icon in in right-most column - see example below.
+It is also possible to see charging history by clicking the appropriate icon in in right-most column - see example below.
 
 .. figure:: images/charging-history.png
   :width: 800
