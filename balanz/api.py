@@ -327,6 +327,10 @@ async def api_handler(websocket):
                             {"status": "NoSuchCharger"},
                         ]
                     else:
+                        charger: Charger = Charger.charger_list[charger_id]
+                        # Remove group association first
+                        del Group.group_list[charger.group_id].chargers[charger_id]
+                        # Then charger
                         del Charger.charger_list[charger_id]
                         Charger.write_csv(config["model"]["chargers_csv"])
                         result = [
