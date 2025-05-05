@@ -11,6 +11,9 @@ import sys
 
 # The set of chargers can be scoped either by charger_id or by an entire group; or all chargers.
 
+# Note the required dependencies, which may be either installed via pip or using the Makefile
+# install command in the root of the project
+
 class BalanzConnection:
     """Balanz connection class"""
 
