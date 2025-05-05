@@ -82,22 +82,22 @@ async def bulk(args):
         found_value = False
         for v in values:
             if v["key"] == args.key:
-                value = v["value"]
+                value = str(v["value"])
                 found_value = True
 
                 if value == args.value:
-                    print("    value already match. No change required")
+                    print("    value matches - no change required")
                 else:
-                    ok, response = await client.command("ChangeConfiguration", {"charger_id": charger_id, "key": args.key, "value": args.value})
-                    if ok != MessageType.CallResult:
-                        print("  failed to set configuration", response)
-                    else:
-                        print("  succesfully updated confiuration")
+                    print("    value mismatch. Value is", value, "and should be", args.value)
+
+                    if args.update:
+                        ok, response = await client.command("ChangeConfiguration", {"charger_id": charger_id, "key": args.key, "value": args.value})
+                        if ok != MessageType.CallResult:
+                            print("  failed to set configuration", response)
+                        else:
+                            print("  succesfully updated confiuration")
         if not found_value:
             print("  value not found")
-
-
-
 
     # Disconnect from balanz API.
     await client.disconnect()
@@ -146,7 +146,12 @@ def main():
         default=False, 
         help="Invert the group selection, i.e. select all chargers NOT in that group"
     )
-
+    parser.add_argument(
+        "--update",
+        type=bool,
+        default=False,
+        help="Update the configuration value. Default is to only check if it is set correctly"
+    )
 
     args = parser.parse_args()
     if not args.user or not args.password or not args.key or not args.value:
