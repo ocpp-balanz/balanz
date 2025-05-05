@@ -86,7 +86,7 @@ async def bulk(args):
                 found_value = True
 
                 if value == args.value:
-                    print("    value matches - no change required")
+                    print("    value already ok - no change required. value is:", value)
                 else:
                     print("    value mismatch. Value is", value, "and should be", args.value)
 
