@@ -103,6 +103,7 @@ async def api_handler(websocket):
                     "ChangeConfiguration",
                     "TriggerMessage",
                     "SetChargePriority",
+                    "UpdateFirmware",
                 ]:
                     charger_id = payload.get("charger_id", None)
 
@@ -772,6 +773,25 @@ async def api_handler(websocket):
                             MessageType.CallResult,
                             message_id,
                             {"status": c_result.status},
+                        ]
+                elif not result and command == "UpdateFirmware":
+                    location = payload.get("location", None)
+
+                    if not location:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "InvalidParameters"},
+                        ]
+                    else:
+                        # Note: No return value from this call!
+                        await charger.ocpp_ref.update_firmware(
+                            location=location
+                        )
+                        result = [
+                            MessageType.CallResult,
+                            message_id,
+                            {"status": "Accepted"},
                         ]
                 elif not result:
                     result = [

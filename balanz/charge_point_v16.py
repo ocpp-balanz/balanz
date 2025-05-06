@@ -4,7 +4,7 @@ Base class for LC and CSMS variant of ChargePoint handling. Do not instantiate t
 
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, UTC
 
 from config import config
 from model import Charger
@@ -191,7 +191,7 @@ class ChargePoint_v16(cp):
         return await self.call(payload)
 
     async def update_firmware_req(self, **kwargs):
-        payload = call.UpdateFirmwarePayload(**kwargs)
+        payload = call.UpdateFirmware(**kwargs)
         return await self.call(payload)
 
     # -------------------------------------
@@ -301,3 +301,11 @@ class ChargePoint_v16(cp):
         Triggers a boot notification to be sent to the charging station.
         """
         return await self.trigger_message_req(requested_message=MessageTrigger.boot_notification)
+    
+    async def update_firmware(self, location: str):
+        """
+        Triggers a firmware upgrade to be sent to the charging station.
+        """
+        now_string: str = datetime.now(UTC).isoformat() + "Z"
+
+        await self.update_firmware_req(location=location, retrieve_date=now_string)

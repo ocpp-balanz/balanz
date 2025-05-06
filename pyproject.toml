@@ -1,6 +1,6 @@
 [project]
 name = "balanz"
-version = "1.0.2"
+version = "1.1.0"
 description = "Simple, yet feature-rich, CSMS or LC OCPP Server with Smart Charging Capabilities."
 authors = [
     {name = "jens-markussen",email = "jens.markussen@gmail.com"}

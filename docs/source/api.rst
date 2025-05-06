@@ -65,6 +65,9 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``SetChargePriority``
      - ``charger_id, alias, connector_id, priority``
      - Update the priority of a session on a connector 
+   * - ``UpdateFirmware``
+     - ``location``
+     - Update the charger firmware 
    * - ``SetBalanzState``
      - ``group_id, suspend`` (True or False)
      - Suspend or resume balanz() for an allocation group

@@ -65,6 +65,7 @@
       <option value="GetSessions">GetSessions</option>
       <option value="GetCSVSessions">GetCSVSessions</option>
       <option value="SetChargePriority">SetChargePriority</option>
+      <option value="UpdateFirmware">UpdateFirmware</option>
       <option value="SetLogLevel">SetLogLevel</option>
       <option value="ClearDefaultProfiles">ClearDefaultProfiles</option>
       <option value="ClearDefaultProfile">ClearDefaultProfile</option>
@@ -165,6 +166,8 @@
         args = '{}'
       } else if (command == "SetChargePriority") {
         args = '{"charger_id": "charger_id", "connector_id": 1, "priority": 10}';
+      } else if (command == "UpdateFirmware") {
+        args = '{"charger_id": "charger_id", "location": "https://abb.down.chargedot.com/MID-22-3P-1.8.32/?1266&TAC3Z9118906710247"}';
       } else if (command == "SetLogLevel") {
         args = '{"component": "balanz", "loglevel": "DEBUG"}';
       } else if (command == "ClearDefaultProfiles") {
