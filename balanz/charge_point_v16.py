@@ -306,7 +306,7 @@ class ChargePoint_v16(cp):
         """
         Triggers a firmware upgrade to be sent to the charging station.
         """
-        # now_string: str = datetime.now(UTC).isoformat() + "Z"
-        now_string: str = "2023-10-01T00:00:00Z"
+        #now_string: str = datetime.now(UTC).isoformat() + "Z"
+        now_string: str = "2023-10-01T00:00:00.000Z"
 
         await self.update_firmware_req(location=location, retrieve_date=now_string)
