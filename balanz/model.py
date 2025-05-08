@@ -840,8 +840,9 @@ class Charger:
                         )
                         return IdTagInfo(status=AuthorizationStatus.concurrent_tx)
 
+                user_name: str = Tag.tag_list[tag.id_tag].user_name if tag.id_tag in Tag.tag_list else "Unknown"
                 logger.info(
-                    f"Authorize on {self.charger_id}. Accepting tag {tag.id_tag}. Parent_id is {tag.parent_id_tag}"
+                    f"Authorize on {self.charger_id}. Accepting tag {tag.id_tag}, parent_id: {tag.parent_id_tag}, user: {user_name}"
                 )
                 return IdTagInfo(status=AuthorizationStatus.accepted, parent_id_tag=tag.parent_id_tag)
             else:
