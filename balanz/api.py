@@ -339,6 +339,30 @@ async def api_handler(websocket):
                             message_id,
                             {"status": "Accepted"},
                         ]
+                elif not result and command == "ResetChargerAuth":
+                    charger_id = payload.get("charger_id", None)
+                    if charger_id is None:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "IllegalArguments"},
+                        ]
+                    elif charger_id not in Charger.charger_list:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "NoSuchCharger"},
+                        ]
+                    else:
+                        charger: Charger = Charger.charger_list[charger_id]
+                        # Delete AuthorizationKey and rewrite CSV file as well.
+                        charger.auth_sha = None
+                        Charger.write_csv(config["model"]["chargers_csv"])
+                        result = [
+                            MessageType.CallResult,
+                            message_id,
+                            {"status": "Accepted"},
+                        ]
                 elif not result and command == "UpdateCharger":
                     charger_id = payload.get("charger_id", None)
                     alias = payload.get("alias", None)

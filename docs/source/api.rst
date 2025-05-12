@@ -104,6 +104,9 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``DeleteCharger``
      - ``charger_id``
      - Deletes existing charger from the system
+   * - ``ResetChargerAuth``
+     - ``charger_id``
+     - Reset the AuthorizationKey for the charger. 
    * - ``UpdateCharger``
      - ``charger_id, alias, priority, description, conn_max``
      - Update existing charger. Updates specified field(s)
