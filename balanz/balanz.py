@@ -167,7 +167,7 @@ async def on_connect(websocket: websockets.asyncio.server.ServerConnection):
     for task in done:
         e = task.exception()
         if e:
-            logger.warning(f"(Not serious) Task {task} raised exception {e}")
+            logger.warning(f"{charger_id} (Not serious - likely connection loss) Task {task} raised exception {e} related to charger ")
 
     # Cancel any remaining tasks
     for task in pending:
