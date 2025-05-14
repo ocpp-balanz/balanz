@@ -369,9 +369,8 @@ async def balanz_loop(group: Group):
                         if result.status != ClearChargingProfileStatus.accepted:
                             logger.warning(
                                 f"Failed to implement balanz change {change} by deleting blocking profile."
-                                f" Result: {result.status}. Aborting further changes"
+                                f" Result: {result.status}. Continuing with other changes regardless"
                             )
-                            break
                         else:
                             conn: Connector = charger.connectors[change.connector_id]
                             logger.debug(f"Cleared blocking profile for {conn.id_str()}")
