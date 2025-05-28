@@ -27,6 +27,7 @@ from ocpp.v16.enums import (
 )
 from user import User, UserType
 from util import gen_sha_256, time_str
+from memory_log_handler import MemoryLogHandler
 
 logger = logging.getLogger("api")
 
@@ -160,6 +161,14 @@ async def api_handler(websocket):
                             "logging": {
                                 name: logging.getLevelName(logging.getLogger(name).level) for name in config["logging"]
                             },
+                        },
+                    ]
+                elif not result and command == "GetLogs":
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        {
+                            "logs": MemoryLogHandler.get_logs()
                         },
                     ]
                 elif not result and command == "SetConfig":

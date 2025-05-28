@@ -43,6 +43,7 @@
       <select id="command" onchange="set_default_args()">
       <option value="None"></option>
       <option value="GetStatus">GetStatus</option>
+      <option value="GetLogs">GetLogs</option>
       <option value="SetConfig">SetConfig</option>
       <option value="SetBalanzState">SetBalanzState</option>
       <option value="GetUsers">GetUsers</option>
@@ -122,6 +123,8 @@
       if (command == "None") {
         args = ""
       } else if (command == "GetStatus") {
+        args = '{}';
+      } else if (command == "GetLogs") {
         args = '{}';
       } else if (command == "SetConfig") {
         args = '{"section": "section", "key": "key", "value": "value"}';

@@ -22,15 +22,34 @@ from ocpp.v16.enums import ChargePointStatus, ChargingProfileStatus, ClearChargi
 from user import User
 from util import gen_sha_256, time_str
 from websockets.frames import CloseCode
+from memory_log_handler import MemoryLogHandler
 
 balanz_version = importlib.metadata.version("balanz")
 
-logging.basicConfig(
-    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
+# Set-up logging stuff
+formatter = logging.Formatter(
+    fmt="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
 )
-logger = logging.getLogger("balanz")
 
+# Console (stderr)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+console_handler.setFormatter(formatter)
+
+# In-memory handler
+memory_handler = MemoryLogHandler(capacity=1000)
+memory_handler.setLevel(logging.INFO)
+memory_handler.setFormatter(formatter)
+
+# Root logger
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+root_logger.addHandler(console_handler)
+root_logger.addHandler(memory_handler)
+
+
+logger = logging.getLogger("balanz")
 
 # TODO: Should some checking be delegated here?
 async def process_request(connection: websockets.asyncio.server.ServerConnection, request):
