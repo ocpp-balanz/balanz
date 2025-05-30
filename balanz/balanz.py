@@ -43,6 +43,7 @@ console_handler.setFormatter(formatter)
 log_memory_handler = MemoryLogHandler(capacity=100000)
 log_memory_handler.setLevel(logging.INFO)
 log_memory_handler.setFormatter(formatter)
+log_memory_handler.set_api_intance()
 
 # Root logger
 root_logger = logging.getLogger()

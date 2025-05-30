@@ -168,7 +168,7 @@ async def api_handler(websocket):
                         MessageType.CallResult,
                         message_id,
                         {
-                            "logs": MemoryLogHandler.get_logs()
+                            "logs": MemoryLogHandler.get_api_logs()
                         },
                     ]
                 elif not result and command == "SetConfig":

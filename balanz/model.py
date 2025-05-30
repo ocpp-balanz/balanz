@@ -276,7 +276,10 @@ class Session:
                     history,
                 ]
             )
-        logger.info(f"Created session {self.session_id} for connector {self.charger_id}/{self.connector_id}")
+        audit_logger.info(f"Created session history entry {self.session_id} for connector {self.charger_id}/{self.connector_id} ({self.charger_alias}). Tag: {self.id_tag} ({self.user_name}). "
+                          f"Start: {time_str(self.start_time)} End: {time_str(self.end_time)}. Duration: {duration_str(self.duration)} kWh: {kwh_str(self.energy_meter)}")
+        return self
+
 
     @classmethod
     def from_live_transaction(
@@ -889,7 +892,7 @@ class Charger:
         )
         user_name: str = Tag.tag_list[id_tag].user_name if id_tag in Tag.tag_list else "Unknown"
         audit_logger.info(
-            f"Starting charging transaction on {self.charger_id}/{connector_id} ({self.alias}). Tag: {id_tag} ({user_name}). Meter start: {meter_start}"
+            f"Starting charging session on {self.charger_id}/{connector_id} ({self.alias}). Tag: {id_tag} ({user_name}). Meter start: {meter_start}"
         )
 
         # Flag for quick balanz() review
@@ -943,7 +946,7 @@ class Charger:
 
         user_name: str = Tag.tag_list[stop_id_tag].user_name if stop_id_tag in Tag.tag_list else "Unknown"
         audit_logger.info(
-            f"Stopping charging transaction on {self.charger_id}/{connector.connector_id} ({self.alias}). Tag: {stop_id_tag} ({user_name}). Reason: {reason}"
+            f"Stopping charging session on {self.charger_id}/{connector.connector_id} ({self.alias}). Tag: {stop_id_tag} ({user_name}). Reason: {reason}"
         )
 
 
