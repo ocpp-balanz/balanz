@@ -23,9 +23,11 @@ from user import User
 from util import gen_sha_256, time_str
 from websockets.frames import CloseCode
 from memory_log_handler import MemoryLogHandler
+from audit_logger import audit_logger
 
 balanz_version = importlib.metadata.version("balanz")
 
+# #################################################
 # Set-up logging stuff
 formatter = logging.Formatter(
     fmt="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -38,16 +40,15 @@ console_handler.setLevel(logging.DEBUG)
 console_handler.setFormatter(formatter)
 
 # In-memory handler
-memory_handler = MemoryLogHandler(capacity=1000)
-memory_handler.setLevel(logging.INFO)
-memory_handler.setFormatter(formatter)
+log_memory_handler = MemoryLogHandler(capacity=100000)
+log_memory_handler.setLevel(logging.INFO)
+log_memory_handler.setFormatter(formatter)
 
 # Root logger
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
 root_logger.addHandler(console_handler)
-root_logger.addHandler(memory_handler)
-
+root_logger.addHandler(log_memory_handler)
 
 logger = logging.getLogger("balanz")
 
@@ -468,6 +469,12 @@ async def main():
     for logger_name in config["logging"]:
         logger.warning(f'Setting log level for {logger_name} to {config.get("logging", logger_name)}')
         logging.getLogger(logger_name).setLevel(level=config.get("logging", logger_name))
+
+    # Audit logger
+    file_handler = logging.FileHandler(config["history"]["audit_file"])
+    file_handler.setFormatter(formatter)
+    audit_logger.addHandler(file_handler)
+
 
     # Get host config
     host = config.get("host", "addr")

@@ -3,13 +3,11 @@ from collections import deque
 from typing import Optional
 
 class MemoryLogHandler(logging.Handler):
-    instance: Optional["MemoryLogHandler"] = None
 
     def __init__(self, capacity=1000):
         super().__init__()
         self.capacity = capacity
         self.logs = deque(maxlen=capacity)  # bounded log memory
-        MemoryLogHandler.instance = self
 
     def emit(self, record):
         if record.levelno >= logging.INFO:  # Only store INFO and above
@@ -27,5 +25,5 @@ class MemoryLogHandler(logging.Handler):
             }
             self.logs.append(log_entry)
 
-    def get_logs():
-        return list(MemoryLogHandler.instance.logs)  # shallow copy
+    def get_logs(self):
+        return list(self.instance.logs)  # shallow copy

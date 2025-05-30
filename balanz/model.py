@@ -47,6 +47,8 @@ from util import (
     status_in_transaction,
     time_str,
 )
+from audit_logger import audit_logger
+
 
 # Logging setup
 logger = logging.getLogger("model")
@@ -820,12 +822,12 @@ class Charger:
         id_tag = id_tag.upper()
         logger.debug(f"authorize. Checking tag {id_tag}")
         if id_tag not in Tag.tag_list:
-            logger.warning(f"Authorize on {self.charger_id}. Rejecting as tag {id_tag} not found")
+            audit_logger.warning(f"Authorize {id_tag} on {self.charger_id} ({self.alias}). Rejecting as tag not found")
             return IdTagInfo(status=AuthorizationStatus.invalid)
         else:
             tag: Tag = Tag.tag_list[id_tag]
+            user_name: str = Tag.tag_list[tag.id_tag].user_name if tag.id_tag in Tag.tag_list else "Unknown"
             if tag.status == TagStatusType.activated:
-
                 if not config.getboolean("csms", "allow_concurrent_tag"):
                     running_id_tags = [
                         conn.transaction.id_tag
@@ -835,18 +837,17 @@ class Charger:
                     ]
                     logger.debug(f"running_id_tags: {running_id_tags}")
                     if id_tag in running_id_tags:
-                        logger.info(
-                            f"Authorize on {self.charger_id}. Rejecting as tag already used in another transaction."
+                        audit_logger.warning(
+                            f"Authorize {id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Rejecting as tag already used in another transaction."
                         )
                         return IdTagInfo(status=AuthorizationStatus.concurrent_tx)
 
-                user_name: str = Tag.tag_list[tag.id_tag].user_name if tag.id_tag in Tag.tag_list else "Unknown"
-                logger.info(
-                    f"Authorize on {self.charger_id}. Accepting tag {tag.id_tag}, parent_id: {tag.parent_id_tag}, user: {user_name}"
+                audit_logger.info(
+                    f"Authorize {tag.id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Accepting tag. Parent Id: {tag.parent_id_tag}"
                 )
                 return IdTagInfo(status=AuthorizationStatus.accepted, parent_id_tag=tag.parent_id_tag)
             else:
-                logger.warning(f"Authorize on {self.charger_id}. Rejecting tag {tag.id_tag} as in state {tag.status}")
+                audit_logger.warning(f"Authorize {tag.id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Rejecting tag as in state {tag.status}")
                 return IdTagInfo(status=AuthorizationStatus.blocked)
 
     def start_transaction(self, connector_id: int, id_tag: str, meter_start: int, timestamp: float) -> int:
@@ -886,9 +887,9 @@ class Charger:
             start_time=timestamp,
             meter_start=meter_start,
         )
-        logger.info(
-            f"start_transaction: Connector {self.charger_id}/{connector_id} started transaction "
-            f"{connector.transaction_id} with id tag {id_tag} and meter start {meter_start}"
+        user_name: str = Tag.tag_list[id_tag].user_name if id_tag in Tag.tag_list else "Unknown"
+        audit_logger.info(
+            f"Starting charging transaction on {self.charger_id}/{connector_id} ({self.alias}). Tag: {id_tag} ({user_name}). Meter start: {meter_start}"
         )
 
         # Flag for quick balanz() review
@@ -940,10 +941,11 @@ class Charger:
         connector._bz_reviewed = False  # Reset flag for later
         connector._bz_reset()
 
-        logger.info(
-            f"stop_transaction: Connector {self.charger_id}/{connector.connector_id} stopped."
-            f" id_tag: {stop_id_tag}, reason: {reason}"
+        user_name: str = Tag.tag_list[stop_id_tag].user_name if stop_id_tag in Tag.tag_list else "Unknown"
+        audit_logger.info(
+            f"Stopping charging transaction on {self.charger_id}/{connector.connector_id} ({self.alias}). Tag: {stop_id_tag} ({user_name}). Reason: {reason}"
         )
+
 
     def status_notification(self, connector_id: int, status: ChargePointStatus) -> None:
         """Update the status of the connector. Will also update the last_update field."""
