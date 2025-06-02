@@ -476,7 +476,6 @@ async def main():
     file_handler.setFormatter(formatter)
     audit_logger.addHandler(file_handler)
 
-
     # Get host config
     host = config.get("host", "addr")
     port = config.get("host", "port")

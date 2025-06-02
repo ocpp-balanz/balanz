@@ -276,7 +276,7 @@ class Session:
                     history,
                 ]
             )
-        audit_logger.info(f"Created session history entry {self.session_id} for connector {self.charger_id}/{self.connector_id} ({self.charger_alias}). Tag: {self.id_tag} ({self.user_name}). "
+        audit_logger.info(f"[SESSION_HIST] Created session history entry {self.session_id} for connector {self.charger_id}/{self.connector_id} ({self.charger_alias}). Tag: {self.id_tag} ({self.user_name}). "
                           f"Start: {time_str(self.start_time)} End: {time_str(self.end_time)}. Duration: {duration_str(self.duration)} kWh: {kwh_str(self.energy_meter)}")
         return self
 
@@ -825,7 +825,7 @@ class Charger:
         id_tag = id_tag.upper()
         logger.debug(f"authorize. Checking tag {id_tag}")
         if id_tag not in Tag.tag_list:
-            audit_logger.warning(f"Authorize {id_tag} on {self.charger_id} ({self.alias}). Rejecting as tag not found")
+            audit_logger.warning(f"[AUTH-REJECT] Authorize {id_tag} on {self.charger_id} ({self.alias}). Rejecting as tag not found")
             return IdTagInfo(status=AuthorizationStatus.invalid)
         else:
             tag: Tag = Tag.tag_list[id_tag]
@@ -841,16 +841,16 @@ class Charger:
                     logger.debug(f"running_id_tags: {running_id_tags}")
                     if id_tag in running_id_tags:
                         audit_logger.warning(
-                            f"Authorize {id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Rejecting as tag already used in another transaction."
+                            f"[AUTH-REJECT] Authorize {id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Rejecting as tag already used in another transaction."
                         )
                         return IdTagInfo(status=AuthorizationStatus.concurrent_tx)
 
                 audit_logger.info(
-                    f"Authorize {tag.id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Accepting tag. Parent Id: {tag.parent_id_tag}"
+                    f"[AUTH-OK] Authorize {tag.id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Accepting tag. Parent Id: {tag.parent_id_tag}"
                 )
                 return IdTagInfo(status=AuthorizationStatus.accepted, parent_id_tag=tag.parent_id_tag)
             else:
-                audit_logger.warning(f"Authorize {tag.id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Rejecting tag as in state {tag.status}")
+                audit_logger.warning(f"[AUTH-REJECT] Authorize {tag.id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Rejecting tag as in state {tag.status}")
                 return IdTagInfo(status=AuthorizationStatus.blocked)
 
     def start_transaction(self, connector_id: int, id_tag: str, meter_start: int, timestamp: float) -> int:
@@ -892,7 +892,7 @@ class Charger:
         )
         user_name: str = Tag.tag_list[id_tag].user_name if id_tag in Tag.tag_list else "Unknown"
         audit_logger.info(
-            f"Starting charging session on {self.charger_id}/{connector_id} ({self.alias}). Tag: {id_tag} ({user_name}). Meter start: {meter_start}"
+            f"[SESSION-START] Starting charging session on {self.charger_id}/{connector_id} ({self.alias}). Tag: {id_tag} ({user_name}). Meter start: {meter_start}"
         )
 
         # Flag for quick balanz() review
@@ -946,7 +946,7 @@ class Charger:
 
         user_name: str = Tag.tag_list[stop_id_tag].user_name if stop_id_tag in Tag.tag_list else "Unknown"
         audit_logger.info(
-            f"Stopping charging session on {self.charger_id}/{connector.connector_id} ({self.alias}). Tag: {stop_id_tag} ({user_name}). Reason: {reason}"
+            f"[SESSION-STOP] Stopping charging session on {self.charger_id}/{connector.connector_id} ({self.alias}). Tag: {stop_id_tag} ({user_name}). Reason: {reason}"
         )
 
 
