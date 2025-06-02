@@ -1,5 +1,5 @@
 """
-User model. Simple user management. 
+User model. Simple user management.
 
 Users will be stored in a CSV file along with a sha256 hash of their login (username+password).
 """

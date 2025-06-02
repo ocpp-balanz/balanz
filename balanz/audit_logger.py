@@ -1,4 +1,5 @@
 import logging
+
 from config import config
 from memory_log_handler import MemoryLogHandler
 
@@ -8,7 +9,3 @@ from memory_log_handler import MemoryLogHandler
 # audit file handler
 
 audit_logger = logging.getLogger("AUDIT")
-
-
-
-

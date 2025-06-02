@@ -34,6 +34,7 @@ from datetime import datetime
 from enum import StrEnum
 from math import ceil
 
+from audit_logger import audit_logger
 from config import config
 from ocpp.v16.datatypes import IdTagInfo
 from ocpp.v16.enums import AuthorizationStatus, ChargePointStatus
@@ -47,8 +48,6 @@ from util import (
     status_in_transaction,
     time_str,
 )
-from audit_logger import audit_logger
-
 
 # Logging setup
 logger = logging.getLogger("model")
@@ -276,10 +275,11 @@ class Session:
                     history,
                 ]
             )
-        audit_logger.info(f"[SESSION_HIST] Created session history entry {self.session_id} for connector {self.charger_id}/{self.connector_id} ({self.charger_alias}). Tag: {self.id_tag} ({self.user_name}). "
-                          f"Start: {time_str(self.start_time)} End: {time_str(self.end_time)}. Duration: {duration_str(self.duration)} kWh: {kwh_str(self.energy_meter)}")
+        audit_logger.info(
+            f"[SESSION_HIST] Created session history entry {self.session_id} for connector {self.charger_id}/{self.connector_id} ({self.charger_alias}). Tag: {self.id_tag} ({self.user_name}). "
+            f"Start: {time_str(self.start_time)} End: {time_str(self.end_time)}. Duration: {duration_str(self.duration)} kWh: {kwh_str(self.energy_meter)}"
+        )
         return self
-
 
     @classmethod
     def from_live_transaction(
@@ -825,7 +825,9 @@ class Charger:
         id_tag = id_tag.upper()
         logger.debug(f"authorize. Checking tag {id_tag}")
         if id_tag not in Tag.tag_list:
-            audit_logger.warning(f"[AUTH-REJECT] Authorize {id_tag} on {self.charger_id} ({self.alias}). Rejecting as tag not found")
+            audit_logger.warning(
+                f"[AUTH-REJECT] Authorize {id_tag} on {self.charger_id} ({self.alias}). Rejecting as tag not found"
+            )
             return IdTagInfo(status=AuthorizationStatus.invalid)
         else:
             tag: Tag = Tag.tag_list[id_tag]
@@ -850,7 +852,9 @@ class Charger:
                 )
                 return IdTagInfo(status=AuthorizationStatus.accepted, parent_id_tag=tag.parent_id_tag)
             else:
-                audit_logger.warning(f"[AUTH-REJECT] Authorize {tag.id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Rejecting tag as in state {tag.status}")
+                audit_logger.warning(
+                    f"[AUTH-REJECT] Authorize {tag.id_tag} ({user_name}) on {self.charger_id} ({self.alias}). Rejecting tag as in state {tag.status}"
+                )
                 return IdTagInfo(status=AuthorizationStatus.blocked)
 
     def start_transaction(self, connector_id: int, id_tag: str, meter_start: int, timestamp: float) -> int:
@@ -948,7 +952,6 @@ class Charger:
         audit_logger.info(
             f"[SESSION-STOP] Stopping charging session on {self.charger_id}/{connector.connector_id} ({self.alias}). Tag: {stop_id_tag} ({user_name}). Reason: {reason}"
         )
-
 
     def status_notification(self, connector_id: int, status: ChargePointStatus) -> None:
         """Update the status of the connector. Will also update the last_update field."""
@@ -1468,7 +1471,9 @@ class Group:
             ):
                 # Not using full offer (which is above the minimum), so can be reduced.
                 # Will be in effect for the rest of the transaction
-                conn._bz_ev_max_usage = max(ceil(conn.get_max_recent_usage()), config.getfloat("balanz", "min_allocation"))
+                conn._bz_ev_max_usage = max(
+                    ceil(conn.get_max_recent_usage()), config.getfloat("balanz", "min_allocation")
+                )
                 logger.info(
                     f"balanz: Due to EV lower usage, reducing max alloc to {conn._bz_ev_max_usage}"
                     f" for {conn.id_str()}"

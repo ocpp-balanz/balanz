@@ -12,7 +12,9 @@ import drawmodel
 import websockets
 import websockets.asyncio
 import websockets.asyncio.server
+from audit_logger import audit_logger
 from config import config
+from memory_log_handler import MemoryLogHandler
 from model import Charger, Group, Session, Tag
 from ocpp.messages import MessageType
 from ocpp.v16 import call_result
@@ -27,8 +29,6 @@ from ocpp.v16.enums import (
 )
 from user import User, UserType
 from util import gen_sha_256, time_str
-from memory_log_handler import MemoryLogHandler
-from audit_logger import audit_logger
 
 logger = logging.getLogger("api")
 
@@ -169,9 +169,7 @@ async def api_handler(websocket):
                     result = [
                         MessageType.CallResult,
                         message_id,
-                        {
-                            "logs": MemoryLogHandler.get_api_logs(filters)
-                        },
+                        {"logs": MemoryLogHandler.get_api_logs(filters)},
                     ]
                 elif not result and command == "SetConfig":
                     section = payload.get("section", None)
@@ -309,7 +307,9 @@ async def api_handler(websocket):
                             {"status": "ChargerAlreadyExists"},
                         ]
                     else:
-                        audit_logger.info(f"[CHARGER-NEW] Created new charger {charger_id} ({alias}) in group {group_id} with description {description} with max power {conn_max}.")
+                        audit_logger.info(
+                            f"[CHARGER-NEW] Created new charger {charger_id} ({alias}) in group {group_id} with description {description} with max power {conn_max}."
+                        )
                         Charger(
                             charger_id=charger_id,
                             alias=alias,
@@ -435,7 +435,9 @@ async def api_handler(websocket):
                             {"status": "NoSuchTag"},
                         ]
                     else:
-                        audit_logger.info(f"[TAG-UPDATE] Updated tag {id_tag}. User name: {user_name}, Parent tag ID: {parent_id_tag}, Description: {description}, Status: {status}, Priority: {priority}")
+                        audit_logger.info(
+                            f"[TAG-UPDATE] Updated tag {id_tag}. User name: {user_name}, Parent tag ID: {parent_id_tag}, Description: {description}, Status: {status}, Priority: {priority}"
+                        )
                         Tag.tag_list[id_tag].update(
                             user_name=user_name,
                             parent_id_tag=parent_id_tag,
@@ -471,7 +473,9 @@ async def api_handler(websocket):
                             {"status": "TagExists"},
                         ]
                     else:
-                        audit_logger.info(f"[TAG-NEW] Created tag {id_tag} for user {user_name}. Description {description}. Priority {priority}. Parent tag: {parent_id_tag}. Status {status}")
+                        audit_logger.info(
+                            f"[TAG-NEW] Created tag {id_tag} for user {user_name}. Description {description}. Priority {priority}. Parent tag: {parent_id_tag}. Status {status}"
+                        )
                         Tag(
                             id_tag=id_tag,
                             user_name=user_name,
@@ -825,9 +829,7 @@ async def api_handler(websocket):
                         ]
                     else:
                         # Note: No return value from this call!
-                        await charger.ocpp_ref.update_firmware(
-                            location=location
-                        )
+                        await charger.ocpp_ref.update_firmware(location=location)
                         result = [
                             MessageType.CallResult,
                             message_id,

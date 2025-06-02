@@ -1,5 +1,4 @@
-"""This module contains the tests for a single charger.
-"""
+"""This module contains the tests for a single charger."""
 
 import asyncio
 

@@ -14,25 +14,22 @@ import websockets
 import websockets.asyncio
 import websockets.asyncio.server
 from api import api_handler
+from audit_logger import audit_logger
 from charge_point_csms_v16 import ChargePoint_CSMS_v16
 from charge_point_lc_v16 import ChargePoint_LC_v16
 from config import config
+from memory_log_handler import MemoryLogHandler
 from model import ChargeChange, Charger, Connector, Group, Session, Tag, Transaction
 from ocpp.v16.enums import ChargePointStatus, ChargingProfileStatus, ClearChargingProfileStatus, Reason
 from user import User
 from util import gen_sha_256, time_str
 from websockets.frames import CloseCode
-from memory_log_handler import MemoryLogHandler
-from audit_logger import audit_logger
 
 balanz_version = importlib.metadata.version("balanz")
 
 # #################################################
 # Set-up logging stuff
-formatter = logging.Formatter(
-    fmt="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
+formatter = logging.Formatter(fmt="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
 # Console (stderr)
 console_handler = logging.StreamHandler()
@@ -52,6 +49,7 @@ root_logger.addHandler(console_handler)
 root_logger.addHandler(log_memory_handler)
 
 logger = logging.getLogger("balanz")
+
 
 # TODO: Should some checking be delegated here?
 async def process_request(connection: websockets.asyncio.server.ServerConnection, request):
@@ -188,7 +186,9 @@ async def on_connect(websocket: websockets.asyncio.server.ServerConnection):
     for task in done:
         e = task.exception()
         if e:
-            logger.warning(f"{charger_id} (Not serious - likely connection loss) Task {task} raised exception {e} related to charger ")
+            logger.warning(
+                f"{charger_id} (Not serious - likely connection loss) Task {task} raised exception {e} related to charger "
+            )
 
     # Cancel any remaining tasks
     for task in pending:

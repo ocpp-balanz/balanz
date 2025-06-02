@@ -14,6 +14,7 @@ def time_str(t: float) -> str:
     """Converts a timestamp to a string (local time)"""
     return datetime.fromtimestamp(t).strftime("%Y-%m-%d %H:%M:%S") if t else "N/A"
 
+
 def parse_time(timestamp: str) -> float:
     """Parses an ISO timestamp (i.e. a timestamp with a time zone indicator, either +xx:xx or Z for Zulu)"""
     if len(timestamp) == 0:

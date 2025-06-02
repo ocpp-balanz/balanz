@@ -1,5 +1,4 @@
-"""This module contains the tests for multiple chargers, balancing the load.
-"""
+"""This module contains the tests for multiple chargers, balancing the load."""
 
 import asyncio
 
