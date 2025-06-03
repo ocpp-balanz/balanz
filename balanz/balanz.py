@@ -266,7 +266,7 @@ async def balanz_loop(group: Group):
                         result = await charger.ocpp_ref.set_blocking_default_profile(connector_id=connector_id)
                         if result.status != ChargingProfileStatus.accepted:
                             logger.warning(
-                                f"Failed to set blocking default profile for {charger.charger_id}/{connector_id}."
+                                f"Failed to set blocking default profile for {charger.charger_id}/{connector_id} ({charger.alias})."
                                 f" Result: {result.status}"
                             )
                             # TODO: Check error handling
@@ -275,10 +275,10 @@ async def balanz_loop(group: Group):
                     result = await charger.ocpp_ref.set_base_default_profile()
                     if result.status != ChargingProfileStatus.accepted:
                         logger.warning(
-                            f"Failed to set base default profile for {charger.charger_id}. Result: {result.status}"
+                            f"Failed to set base default profile for {charger.charger_id} ({charger.alias}). Result: {result.status}"
                         )
 
-                    logger.info(f"Succesfully cleared and set default profiles for {charger.charger_id}")
+                    logger.info(f"Succesfully cleared and set default profiles for {charger.charger_id} ({charger.alias})")
 
                     charger.profile_initialized = True
                 # Give some time, by rerunning loop before calling balanz()
@@ -337,12 +337,12 @@ async def balanz_loop(group: Group):
                     result = await charger.ocpp_ref.set_blocking_default_profile(connector_id=trans.connector_id)
                     if result.status != ChargingProfileStatus.accepted:
                         logger.warning(
-                            f"Failed to reset blocking default profile for {trans.charger_id}/{trans.connector_id}."
+                            f"Failed to reset blocking default profile for {trans.id_str()}."
                             f" Result: {result.status}"
                         )
                     else:
                         logger.debug(
-                            f"Ok TxProfile/reset blocking default profile for {trans.charger_id}/{trans.connector_id}."
+                            f"Ok TxProfile/reset blocking default profile for {trans.id_str()}."
                         )
                 trans.connector._bz_blocking_profile_reset = True  # TODO: This can be dangerous, should it be break?
 
@@ -367,7 +367,7 @@ async def balanz_loop(group: Group):
                 charger: Charger = Charger.charger_list[change.charger_id]
                 # Check valid ocpp_ref
                 if not charger.ocpp_ref:
-                    logger.warning(f"Skipping charging change for charger {charger.charger_id} as no ocpp_ref set.")
+                    logger.warning(f"Skipping charging change for charger {charger.charger_id} ({charger.alias}) as no ocpp_ref set.")
                     continue  # TODO: Potentally dangerous
 
                 if change.transaction_id is None:
@@ -381,7 +381,7 @@ async def balanz_loop(group: Group):
                         result = await charger.ocpp_ref.set_blocking_default_profile(change.connector_id)
                         if result.status != ChargingProfileStatus.accepted:
                             logger.warning(
-                                f"Failed to set blocking default profile to do {change}"
+                                f"Failed to set blocking default profile to do {change} ({charger.alias})"
                                 f" Result: {result.status}. Aborting further changes"
                             )
                             break
@@ -389,7 +389,7 @@ async def balanz_loop(group: Group):
                         result = await charger.ocpp_ref.clear_blocking_default_profile(change.connector_id)
                         if result.status != ClearChargingProfileStatus.accepted:
                             logger.warning(
-                                f"Failed to implement balanz change {change} by deleting blocking profile."
+                                f"Failed to implement balanz change {change} ({charger.alias}) by deleting blocking profile."
                                 f" Result: {result.status}. Continuing with other changes regardless"
                             )
                         else:
@@ -405,11 +405,11 @@ async def balanz_loop(group: Group):
                     )
                     if result.status != ChargingProfileStatus.accepted:
                         logger.warning(
-                            f"Failed to implement change {change}. Result: {result.status}. Aborting further changes.."
+                            f"Failed to implement change {change} ({charger.alias}). Result: {result.status}. Aborting further changes.."
                         )
                         break
 
-                logger.info(f"Succesfully implemented balanz change {change}")
+                logger.info(f"Succesfully implemented balanz change {change} ({charger.alias})")
 
                 # Report change back to model
                 charger.charge_change_implemented(change)

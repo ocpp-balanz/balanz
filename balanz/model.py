@@ -458,7 +458,7 @@ class Transaction:
         self.connector._bz_last_offer_time = time.time()
         self.connector._bz_blocking_profile_reset = False
 
-        logger.info(
+        logger.debug(
             f"Created transaction {transaction_id} for connector {charger_id}/{self.connector_id} by tag {id_tag}"
             f" starting at {time_str(start_time)}"
         )
@@ -473,7 +473,7 @@ class Transaction:
         return str(vars(self))
 
     def id_str(self) -> str:
-        return f"{self.charger_id}/{self.connector_id}:{self.transaction_id}"
+        return f"{self.charger_id}/{self.connector_id}:{self.transaction_id} ({self.connector.charger.alias})"
 
 
 class Connector:
@@ -564,7 +564,7 @@ class Connector:
         return str(vars(self))
 
     def id_str(self) -> str:
-        return f"{self.charger_id}/{self.connector_id}"
+        return f"{self.charger_id}/{self.connector_id} ({self.charger.alias})"
 
     def conn_max(self) -> float:
         return self.charger.conn_max
@@ -809,13 +809,13 @@ class Charger:
         for arg in kwargs:
             if hasattr(self, arg):
                 setattr(self, arg, kwargs[arg])
-        logger.info(f"boot_notification from {self.charger_id}")
+        logger.info(f"boot_notification from {self.charger_id} ({self.alias})")
 
     def heartbeat(self, timestamp: float = None) -> None:
         """Register a Heartbeat for the charger. Updates the last_update field."""
         if not timestamp:
             timestamp = time.time()
-        logger.debug(f"heartbeat from {self.charger_id}")
+        logger.debug(f"heartbeat from {self.charger_id} ({self.alias})")
 
     def authorize(self, id_tag: str) -> IdTagInfo:
         """Authorize a tag.
@@ -967,7 +967,7 @@ class Charger:
         old_status = connector.status
         if status != old_status:
             logger.info(
-                f"Updating status for connector {self.charger_id}/{connector.connector_id}:"
+                f"Updating status for connector {self.charger_id}/{connector.connector_id} ({self.alias}):"
                 f" {connector.status} => {status}"
             )
             connector.status = status
@@ -1047,7 +1047,7 @@ class Charger:
         if offered is not None:
             if offered != connector.offered:
                 logger.info(
-                    f"Connector {self.charger_id}/{connector_id} reported offer {offered} which is different to "
+                    f"Connector {self.charger_id}/{connector_id}  ({self.alias}) reported offer {offered} which is different to "
                     f"expected {connector.offered}. Adjusting it."
                 )
                 connector.offered = offered
