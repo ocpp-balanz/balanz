@@ -177,7 +177,7 @@ async def on_connect(websocket: websockets.asyncio.server.ServerConnection):
     # Store reference to cp on charger (to be used for all communications)
     charger.ocpp_ref = cp
     charger.requested_status = False
-    logger.info(f"Charger {charger_id} succesfully connected.")
+    logger.info(f"Charger {charger_id} ({charger.alias}) succesfully connected.")
 
     # Wait for tasks to complete
     done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -187,7 +187,7 @@ async def on_connect(websocket: websockets.asyncio.server.ServerConnection):
         e = task.exception()
         if e:
             logger.warning(
-                f"{charger_id} (Not serious - likely connection loss) Task {task} raised exception {e} related to charger "
+                f"{charger_id} ({charger.alias}) (Not serious - likely connection loss) Task {task} raised exception {e} related to charger "
             )
 
     # Cancel any remaining tasks
@@ -195,7 +195,7 @@ async def on_connect(websocket: websockets.asyncio.server.ServerConnection):
         task.cancel()
 
     # Finally, clear stuff.
-    logger.info(f"Charger {charger_id} stopped. Closing connection")
+    logger.info(f"Charger {charger_id} ({charger.alias}) stopped. Closing connection")
     cp.charger = None
     charger.ocpp_ref = None
     # Note, on purpose NOT clearing charger.last_update as this will be used to determine if to invalidate transactions.
