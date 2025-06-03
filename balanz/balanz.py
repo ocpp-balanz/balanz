@@ -278,7 +278,9 @@ async def balanz_loop(group: Group):
                             f"Failed to set base default profile for {charger.charger_id} ({charger.alias}). Result: {result.status}"
                         )
 
-                    logger.info(f"Succesfully cleared and set default profiles for {charger.charger_id} ({charger.alias})")
+                    logger.info(
+                        f"Succesfully cleared and set default profiles for {charger.charger_id} ({charger.alias})"
+                    )
 
                     charger.profile_initialized = True
                 # Give some time, by rerunning loop before calling balanz()
@@ -341,9 +343,7 @@ async def balanz_loop(group: Group):
                             f" Result: {result.status}"
                         )
                     else:
-                        logger.debug(
-                            f"Ok TxProfile/reset blocking default profile for {trans.id_str()}."
-                        )
+                        logger.debug(f"Ok TxProfile/reset blocking default profile for {trans.id_str()}.")
                 trans.connector._bz_blocking_profile_reset = True  # TODO: This can be dangerous, should it be break?
 
             # Actual rebalancing. First reduce, wait a little (configurable), then grow
@@ -367,7 +367,9 @@ async def balanz_loop(group: Group):
                 charger: Charger = Charger.charger_list[change.charger_id]
                 # Check valid ocpp_ref
                 if not charger.ocpp_ref:
-                    logger.warning(f"Skipping charging change for charger {charger.charger_id} ({charger.alias}) as no ocpp_ref set.")
+                    logger.warning(
+                        f"Skipping charging change for charger {charger.charger_id} ({charger.alias}) as no ocpp_ref set."
+                    )
                     continue  # TODO: Potentally dangerous
 
                 if change.transaction_id is None:

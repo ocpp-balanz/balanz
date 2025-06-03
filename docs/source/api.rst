@@ -135,6 +135,11 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
      - ``component, loglevel``
      - Dynamically update log level. See list of components in the balanz configuration file. 
        loglevel may be ``ERROR``, ``WARNING``, ``INFO``, or ``DEBUG``
+   * - ``GetLogs``
+     - ``filters`` Filters is a record with optional fields ``level``, ``messageSearch``, 
+       ``timestampStart``, ``timestampEnd``, ``module``
+     - Retrieve system or audit logs. Audit logs have module == ``AUDIT``.
+
 
 For example, to return all chargers belonging to the ``RR2`` group, send the following command
 setting ``messageId`` to ``123456``::
