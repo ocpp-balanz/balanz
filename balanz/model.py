@@ -276,7 +276,7 @@ class Session:
                 ]
             )
         audit_logger.info(
-            f"[SESSION_HIST] Created session history entry {self.session_id} for connector {self.charger_id}/{self.connector_id} ({self.charger_alias}). Tag: {self.id_tag} ({self.user_name}). "
+            f"[SESSION-HIST] Created session history entry {self.session_id} for connector {self.charger_id}/{self.connector_id} ({self.charger_alias}). Tag: {self.id_tag} ({self.user_name}). "
             f"Start: {time_str(self.start_time)} End: {time_str(self.end_time)}. Duration: {duration_str(self.duration)} kWh: {kwh_str(self.energy_meter)}"
         )
         return self
@@ -1041,7 +1041,7 @@ class Charger:
 
         # Always set the offered field, even if meter_values does not have a transaction_id
         logger.debug(
-            f"meter_values: Connector {self.charger_id}/{connector_id} usage_meter {usage_meter},"
+            f"meter_values: Connector {self.charger_id}/{connector_id} ({self.alias}) usage_meter {usage_meter},"
             f" energy_meter {energy_meter}, offered {offered} at {time_str(timestamp)}"
         )
         if offered is not None:
