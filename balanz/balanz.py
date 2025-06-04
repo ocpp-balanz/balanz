@@ -205,7 +205,10 @@ async def on_connect(websocket: websockets.asyncio.server.ServerConnection):
 async def balanz_loop(group: Group):
     """balanz (smart charging) control loop.
 
-    There will be one loop running as a task per allocation group. This loop will call the balanz() function on
+    There will be one loop running as a task per group. This is mostly interesting for allocation groups. However,
+    it will run for every group.
+
+    For allocation groups, this loop will call the balanz() function on
     the group at the interval configured and then proceed to implement any allocation/offer changes requested.
 
     loop will run every "run_interval" seconds (default 5 seconds) to check for more urgent events.
@@ -213,6 +216,9 @@ async def balanz_loop(group: Group):
     on the connector).
 
     Once every "intervals_full" times (default 12, so once every minute), a full run will be done regardless.
+
+    For non-allocation groups the main point is to check if a charger has reconnected and then to ask for an update
+    on it's status, including things like firmware levels.
     """
 
     # Initial delay before loop. This allows things to startup nicely.
@@ -225,8 +231,14 @@ async def balanz_loop(group: Group):
 
         loop_count += 1
         # Time to do stuff? Either because it is time, or because urgent things to do.
+        # First do for non allocation group - they run only every intervals_full..
+        if not group.is_allocation_group() and loop_count % intervals_full != 0:
+            continue
+
+        # Then for allocation groups
         if (
-            (loop_count % intervals_full != 0)
+            group.is_allocation_group()
+            and (loop_count % intervals_full != 0)
             and not group.chargers_not_init()
             and not group.connectors_balanz_review()
         ):
@@ -240,53 +252,56 @@ async def balanz_loop(group: Group):
 
             logger.debug(f"Balanz run for group {group.group_id}. Run interval loop count {loop_count}")
 
-            # First, check if any chargers not yet initialized. This is a priority to ensure that chargers
-            # do not independently make allocations.
-            chargers_to_initialize = group.chargers_not_init()
-            if chargers_to_initialize:
-                logger.info(
-                    f'Group {group.group_id}. Chargers to init {",".join(c.charger_id for c in chargers_to_initialize)}'
-                )
-                # Set charger default state(s) case.
-                for charger in chargers_to_initialize:
-                    # Check valid ocpp_ref
-                    if not charger.ocpp_ref:
-                        logger.warning(f"While trying to initialize {charger.charger_id} no ocpp_ref was set.")
-                        continue
+            # Allocation group only!
+            if group.is_allocation_group():
+                # First, check if any chargers not yet initialized. This is a priority to ensure that chargers
+                # do not independently make allocations.
+                chargers_to_initialize = group.chargers_not_init()
+                if chargers_to_initialize:
+                    logger.info(
+                        f'Group {group.group_id}. Chargers to init {",".join(c.charger_id for c in chargers_to_initialize)}'
+                    )
+                    # Set charger default state(s) case.
+                    for charger in chargers_to_initialize:
+                        # Check valid ocpp_ref
+                        if not charger.ocpp_ref:
+                            logger.warning(f"While trying to initialize {charger.charger_id} no ocpp_ref was set.")
+                            continue
 
-                    # First clear any profiles
-                    result = await charger.ocpp_ref.clear_all_default_profiles()
-                    if result.status != ClearChargingProfileStatus.accepted:
-                        logger.warning(
-                            f"Failed to clear default profiles for {charger.charger_id}. Result: {result.status}"
-                        )
+                        # First clear any profiles
+                        result = await charger.ocpp_ref.clear_all_default_profiles()
+                        if result.status != ClearChargingProfileStatus.accepted:
+                            logger.warning(
+                                f"Failed to clear default profiles for {charger.charger_id}. Result: {result.status}"
+                            )
 
-                    # Blocking profile(s) first
-                    for connector_id in range(1, len(charger.connectors) + 1):
-                        result = await charger.ocpp_ref.set_blocking_default_profile(connector_id=connector_id)
+                        # Blocking profile(s) first
+                        for connector_id in range(1, len(charger.connectors) + 1):
+                            result = await charger.ocpp_ref.set_blocking_default_profile(connector_id=connector_id)
+                            if result.status != ChargingProfileStatus.accepted:
+                                logger.warning(
+                                    f"Failed to set blocking default profile for {charger.charger_id}/{connector_id} ({charger.alias})."
+                                    f" Result: {result.status}"
+                                )
+                                # TODO: Check error handling
+
+                        # Then base profile
+                        result = await charger.ocpp_ref.set_base_default_profile()
                         if result.status != ChargingProfileStatus.accepted:
                             logger.warning(
-                                f"Failed to set blocking default profile for {charger.charger_id}/{connector_id} ({charger.alias})."
-                                f" Result: {result.status}"
+                                f"Failed to set base default profile for {charger.charger_id} ({charger.alias}). Result: {result.status}"
                             )
-                            # TODO: Check error handling
 
-                    # Then base profile
-                    result = await charger.ocpp_ref.set_base_default_profile()
-                    if result.status != ChargingProfileStatus.accepted:
-                        logger.warning(
-                            f"Failed to set base default profile for {charger.charger_id} ({charger.alias}). Result: {result.status}"
+                        logger.info(
+                            f"Succesfully cleared and set default profiles for {charger.charger_id} ({charger.alias})"
                         )
 
-                    logger.info(
-                        f"Succesfully cleared and set default profiles for {charger.charger_id} ({charger.alias})"
-                    )
-
-                    charger.profile_initialized = True
-                # Give some time, by rerunning loop before calling balanz()
-                continue
+                        charger.profile_initialized = True
+                    # Give some time, by rerunning loop before calling balanz()
+                    continue
 
             # Quick check for any chargers recently (re)connected where we should ask status
+            # This part is for BOTH allocation groups and non-allocation groups
             chargers_to_request_status = group.chargers_to_request_status()
             if chargers_to_request_status:
                 for charger in chargers_to_request_status:
@@ -296,125 +311,129 @@ async def balanz_loop(group: Group):
                     await charger.ocpp_ref.trigger_meter_values()
                     charger.requested_status = True
 
-            # Quick check to see any connectors for some reason have not reset the blocking profile but
-            # are in a non transactional situation. We will not be hard on errors in case blocking profile
-            # may be there anyways...
-            reset_connectors: list[Connector] = group.connectors_reset_blocking()
-            for conn in reset_connectors:
-                result = await conn.charger.ocpp_ref.set_blocking_default_profile(connector_id=conn.connector_id)
-                if result.status != ChargingProfileStatus.accepted:
-                    logger.warning(
-                        f"Failed to reset blocking default profile for {conn.id_str()}" f" Result: {result.status}"
-                    )
-                else:
-                    logger.debug(f"Ok reset blocking default profile for {conn.id_str()}")
-                # Note, doing this regardless of result. That is on purpose!
-                conn._bz_blocking_profile_reset = True
-
-            # Next, check for any transactions that have started, but where the default blocking profiles needs
-            # to be reinstated. For these, we first need to set a TxProfile to match the base profile, and then
-            # reset the blocking TxDefaultProfile
-            reset_transactions: list[Transaction] = group.transactions_reset_blocking()
-            for trans in reset_transactions:
-                charger: Charger = Charger.charger_list[trans.charger_id]
-
-                result = await charger.ocpp_ref.set_tx_profile(
-                    connector_id=trans.connector_id,
-                    transaction_id=trans.transaction_id,
-                    limit=config.getint("balanz", "min_allocation"),
-                )
-                if result.status != ChargingProfileStatus.accepted:
-                    logger.warning(f"TxProfile initial setup failed for {trans.id_str()}. Result: {result.status}")
-                else:
-                    # Report this as a change to ensure included in history
-                    charger.charge_change_implemented(
-                        ChargeChange(
-                            charger_id=charger.charger_id,
-                            connector_id=trans.connector_id,
-                            transaction_id=trans.transaction_id,
-                            allocation=config.getint("balanz", "min_allocation"),
-                        )
-                    )
-
-                    result = await charger.ocpp_ref.set_blocking_default_profile(connector_id=trans.connector_id)
+            # Allocation group only!
+            if group.is_allocation_group():
+                # Quick check to see any connectors for some reason have not reset the blocking profile but
+                # are in a non transactional situation. We will not be hard on errors in case blocking profile
+                # may be there anyways...
+                reset_connectors: list[Connector] = group.connectors_reset_blocking()
+                for conn in reset_connectors:
+                    result = await conn.charger.ocpp_ref.set_blocking_default_profile(connector_id=conn.connector_id)
                     if result.status != ChargingProfileStatus.accepted:
                         logger.warning(
-                            f"Failed to reset blocking default profile for {trans.id_str()}."
-                            f" Result: {result.status}"
+                            f"Failed to reset blocking default profile for {conn.id_str()}" f" Result: {result.status}"
                         )
                     else:
-                        logger.debug(f"Ok TxProfile/reset blocking default profile for {trans.id_str()}.")
-                trans.connector._bz_blocking_profile_reset = True  # TODO: This can be dangerous, should it be break?
+                        logger.debug(f"Ok reset blocking default profile for {conn.id_str()}")
+                    # Note, doing this regardless of result. That is on purpose!
+                    conn._bz_blocking_profile_reset = True
 
-            # Actual rebalancing. First reduce, wait a little (configurable), then grow
-            reduce_list, grow_list = group.balanz()
-            # Hack. If there are reduce changes, add a fake final change element. This will drive waiting
-            if reduce_list and grow_list:
-                reduce_list.append(
-                    ChargeChange(
-                        charger_id="_WAIT_",
-                        connector_id=None,
-                        transaction_id=None,
-                        allocation=None,
+                # Next, check for any transactions that have started, but where the default blocking profiles needs
+                # to be reinstated. For these, we first need to set a TxProfile to match the base profile, and then
+                # reset the blocking TxDefaultProfile
+                reset_transactions: list[Transaction] = group.transactions_reset_blocking()
+                for trans in reset_transactions:
+                    charger: Charger = Charger.charger_list[trans.charger_id]
+
+                    result = await charger.ocpp_ref.set_tx_profile(
+                        connector_id=trans.connector_id,
+                        transaction_id=trans.transaction_id,
+                        limit=config.getint("balanz", "min_allocation"),
                     )
-                )
-            for change in reduce_list + grow_list:
-                if change.charger_id == "_WAIT_":
-                    # Wait for a little bit before continuing
-                    await asyncio.sleep(config.getint("balanz", "wait_after_reduce"))
-                    continue
+                    if result.status != ChargingProfileStatus.accepted:
+                        logger.warning(f"TxProfile initial setup failed for {trans.id_str()}. Result: {result.status}")
+                    else:
+                        # Report this as a change to ensure included in history
+                        charger.charge_change_implemented(
+                            ChargeChange(
+                                charger_id=charger.charger_id,
+                                connector_id=trans.connector_id,
+                                transaction_id=trans.transaction_id,
+                                allocation=config.getint("balanz", "min_allocation"),
+                            )
+                        )
 
-                charger: Charger = Charger.charger_list[change.charger_id]
-                # Check valid ocpp_ref
-                if not charger.ocpp_ref:
-                    logger.warning(
-                        f"Skipping charging change for charger {charger.charger_id} ({charger.alias}) as no ocpp_ref set."
-                    )
-                    continue  # TODO: Potentally dangerous
-
-                if change.transaction_id is None:
-                    # Special case when transaction_id is not yet known.
-
-                    # This will normally be the "starting case" which will be addressed by removing the blocking profile.
-                    # However, if that was attempted and did not result in a transaction starting, it may be necessary
-                    # to reinstate the blocking profile...
-                    # Which situation is it?
-                    if change.allocation == 0:
-                        result = await charger.ocpp_ref.set_blocking_default_profile(change.connector_id)
+                        result = await charger.ocpp_ref.set_blocking_default_profile(connector_id=trans.connector_id)
                         if result.status != ChargingProfileStatus.accepted:
                             logger.warning(
-                                f"Failed to set blocking default profile to do {change} ({charger.alias})"
-                                f" Result: {result.status}. Aborting further changes"
-                            )
-                            break
-                    else:
-                        result = await charger.ocpp_ref.clear_blocking_default_profile(change.connector_id)
-                        if result.status != ClearChargingProfileStatus.accepted:
-                            logger.warning(
-                                f"Failed to implement balanz change {change} ({charger.alias}) by deleting blocking profile."
-                                f" Result: {result.status}. Continuing with other changes regardless"
+                                f"Failed to reset blocking default profile for {trans.id_str()}."
+                                f" Result: {result.status}"
                             )
                         else:
-                            conn: Connector = charger.connectors[change.connector_id]
-                            logger.debug(f"Cleared blocking profile for {conn.id_str()}")
-                            conn._bz_blocking_profile_reset = False
-                else:
-                    # Normal case, change is done by updating TxProfile
-                    result = await charger.ocpp_ref.set_tx_profile(
-                        connector_id=change.connector_id,
-                        transaction_id=change.transaction_id,
-                        limit=change.allocation,
+                            logger.debug(f"Ok TxProfile/reset blocking default profile for {trans.id_str()}.")
+                    trans.connector._bz_blocking_profile_reset = (
+                        True  # TODO: This can be dangerous, should it be break?
                     )
-                    if result.status != ChargingProfileStatus.accepted:
-                        logger.warning(
-                            f"Failed to implement change {change} ({charger.alias}). Result: {result.status}. Aborting further changes.."
+
+                # Actual rebalancing. First reduce, wait a little (configurable), then grow
+                reduce_list, grow_list = group.balanz()
+                # Hack. If there are reduce changes, add a fake final change element. This will drive waiting
+                if reduce_list and grow_list:
+                    reduce_list.append(
+                        ChargeChange(
+                            charger_id="_WAIT_",
+                            connector_id=None,
+                            transaction_id=None,
+                            allocation=None,
                         )
-                        break
+                    )
+                for change in reduce_list + grow_list:
+                    if change.charger_id == "_WAIT_":
+                        # Wait for a little bit before continuing
+                        await asyncio.sleep(config.getint("balanz", "wait_after_reduce"))
+                        continue
 
-                logger.info(f"Succesfully implemented balanz change {change} ({charger.alias})")
+                    charger: Charger = Charger.charger_list[change.charger_id]
+                    # Check valid ocpp_ref
+                    if not charger.ocpp_ref:
+                        logger.warning(
+                            f"Skipping charging change for charger {charger.charger_id} ({charger.alias}) as no ocpp_ref set."
+                        )
+                        continue  # TODO: Potentally dangerous
 
-                # Report change back to model
-                charger.charge_change_implemented(change)
+                    if change.transaction_id is None:
+                        # Special case when transaction_id is not yet known.
+
+                        # This will normally be the "starting case" which will be addressed by removing the blocking profile.
+                        # However, if that was attempted and did not result in a transaction starting, it may be necessary
+                        # to reinstate the blocking profile...
+                        # Which situation is it?
+                        if change.allocation == 0:
+                            result = await charger.ocpp_ref.set_blocking_default_profile(change.connector_id)
+                            if result.status != ChargingProfileStatus.accepted:
+                                logger.warning(
+                                    f"Failed to set blocking default profile to do {change} ({charger.alias})"
+                                    f" Result: {result.status}. Aborting further changes"
+                                )
+                                break
+                        else:
+                            result = await charger.ocpp_ref.clear_blocking_default_profile(change.connector_id)
+                            if result.status != ClearChargingProfileStatus.accepted:
+                                logger.warning(
+                                    f"Failed to implement balanz change {change} ({charger.alias}) by deleting blocking profile."
+                                    f" Result: {result.status}. Continuing with other changes regardless"
+                                )
+                            else:
+                                conn: Connector = charger.connectors[change.connector_id]
+                                logger.debug(f"Cleared blocking profile for {conn.id_str()}")
+                                conn._bz_blocking_profile_reset = False
+                    else:
+                        # Normal case, change is done by updating TxProfile
+                        result = await charger.ocpp_ref.set_tx_profile(
+                            connector_id=change.connector_id,
+                            transaction_id=change.transaction_id,
+                            limit=change.allocation,
+                        )
+                        if result.status != ChargingProfileStatus.accepted:
+                            logger.warning(
+                                f"Failed to implement change {change} ({charger.alias}). Result: {result.status}. Aborting further changes.."
+                            )
+                            break
+
+                    logger.info(f"Succesfully implemented balanz change {change} ({charger.alias})")
+
+                    # Report change back to model
+                    charger.charge_change_implemented(change)
 
         except Exception as e:
             logger.error(f"Exception {e} in balanz_loop. Retrying")
@@ -516,12 +535,13 @@ async def main():
         )
 
     tasks = []
-    # Start Balanz loops (one per allocation group). Only if smart charging enabled
+    # Start Balanz loops (one per group). Note, that for groups without smart charging, only simple admin
+    # stuff will be done
     if config.getint("balanz", "run_interval") == 0:
         logger.info("Not starting balanz smart charging as disabled in configuration")
     else:
-        for group in Group.allocation_groups():
-            logger.info(f"Started balanz smart charging for allocation group {group.group_id}")
+        for group in Group.group_list.values():
+            logger.info(f"Started balanz loop for group {group.group_id}")
             tasks.append(asyncio.create_task(balanz_loop(group)))
 
     # Start model watchdog loop
