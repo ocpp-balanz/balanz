@@ -915,6 +915,9 @@ class Charger:
         stop_id_tag: str = None,
     ) -> None:
         """Stop a transaction on the connector. Returns the charging session id."""
+        if stop_id_tag:
+            stop_id_tag = stop_id_tag.upper()
+
         # Find the connector
         search_id = [
             c
@@ -1471,9 +1474,7 @@ class Group:
             ):
                 # Not using full offer (which is above the minimum), so can be reduced.
                 # Will be in effect for the rest of the transaction
-                temp_max_usage = max(
-                    ceil(conn.get_max_recent_usage()), config.getfloat("balanz", "min_allocation")
-                )
+                temp_max_usage = max(ceil(conn.get_max_recent_usage()), config.getfloat("balanz", "min_allocation"))
                 if temp_max_usage != conn._bz_ev_max_usage:
                     conn._bz_ev_max_usage = temp_max_usage
                     logger.info(
