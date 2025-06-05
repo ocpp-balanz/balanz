@@ -8,6 +8,7 @@ import csv
 import logging
 from enum import StrEnum
 
+from audit_logger import audit_logger
 from config import config
 from util import gen_sha_256
 
@@ -92,9 +93,9 @@ class User:
         auth_sha: str = gen_sha_256(auth)
         for user in User.user_list.values():
             if user.auth_sha == auth_sha:
-                logger.info(f"Successful auth check. User {user.user_id}, type {user.user_type}")
+                audit_logger.info(f"Successful auth check. User {user.user_id}, type {user.user_type}")
                 return user.user_type
-        logger.info(f"Failed auth check {auth_sha}")
+        audit_logger.info(f"Failed auth check. auth starts {auth[:5]}...")
         return None
 
     @staticmethod
