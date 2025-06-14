@@ -69,7 +69,7 @@ async def api_handler(websocket):
 
                 # Log call, but not Login (security) and DrawAll (noisy)
                 if command not in ["Login", "DrawAll"]:
-                    logger.info(f"API command received: {command} {message_id} {payload}")
+                    logger.debug(f"API command received: {command} {message_id} {payload}")
 
                 # Handle logon directly
                 if not logged_in and command != "Login":

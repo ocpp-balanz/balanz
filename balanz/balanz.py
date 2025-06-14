@@ -40,7 +40,7 @@ console_handler.setFormatter(formatter)
 log_memory_handler = MemoryLogHandler(capacity=100000)
 log_memory_handler.setLevel(logging.INFO)
 log_memory_handler.setFormatter(formatter)
-log_memory_handler.set_api_intance()
+log_memory_handler.set_api_instance()
 
 # Root logger
 root_logger = logging.getLogger()
@@ -468,7 +468,6 @@ async def model_watchdog():
 
 async def main():
     """main. Argument parsing and startup."""
-    logger.warning(f"Balanz version {balanz_version}")
 
     # Argument stuff.
     parser = argparse.ArgumentParser(description="balanz. OCPP CSMS or LC with smart charging capabilities")
@@ -482,6 +481,8 @@ async def main():
 
     # Read config. config object is then available (via config import) to all.
     config.read(args.config)
+    log_memory_handler.parse_log_file(config["history"]["audit_file"])
+    logger.warning(f"Balanz version {balanz_version}")
 
     # Cheat to use config to share version info and startup-time
     config["balanz"]["version"] = balanz_version
