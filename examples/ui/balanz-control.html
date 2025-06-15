@@ -50,6 +50,11 @@
       <option value="CreateUser">CreateUser</option>
       <option value="UpdateUser">UpdateUser</option>
       <option value="DeleteUser">DeleteUser</option>
+      <option value="GetFirmware">GetFirmware</option>
+      <option value="ReloadFirmware">ReloadFirmware</option>
+      <option value="CreateFirmware">CreateFirmware</option>
+      <option value="ModifyFirmware">ModifyFirmware</option>
+      <option value="DeleteFirmware">DeleteFirmware</option>
       <option value="GetGroups">GetGroups</option>
       <option value="ReloadGroups">ReloadGroups</option>
       <option value="UpdateGroup">UpdateGroup</option>
@@ -130,6 +135,16 @@
         args = '{"section": "section", "key": "key", "value": "value"}';
       } else if (command == "SetBalanzState") {
         args = '{"suspend": true, "group_id": "group_id"}';
+      } else if (command == "GetFirmware") {
+        args = '{}'
+      } else if (command == "ReloadFirmware") {
+        args = '{}'
+      } else if (command == "CreateFirmware") {
+        args = '{"firmware_id": "firmware_id", "charge_point_vendor": "charge_point_vendor", "charge_point_model": "charge_point_model", "firmware_version": "firmware_version", "meter_type": "meter_type", "url": "url", "upgrade_from_versions": "upgrade_from_versions"}'
+      } else if (command == "ModifyFirmware") {
+        args = '{"firmware_id": "firmware_id", "charge_point_vendor": "charge_point_vendor", "charge_point_model": "charge_point_model", "firmware_version": "firmware_version", "meter_type": "meter_type", "url": "url", "upgrade_from_versions": "upgrade_from_versions"}'
+      } else if (command == "DeleteFirmware") {
+        args = '{"firmware_id": "firmware_id"}'
       } else if (command == "GetUsers") {
         args = '{}'
       } else if (command == "CreateUser") {

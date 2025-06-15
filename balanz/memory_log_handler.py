@@ -1,8 +1,9 @@
 import logging
 import re
 from collections import deque
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
 
 class MemoryLogHandler(logging.Handler):
     api_instance: Optional["MemoryLogHandler"] = None
@@ -64,18 +65,17 @@ class MemoryLogHandler(logging.Handler):
                 # Add to filtered logs list.
                 filtered_logs.append(log)
             return filtered_logs
-        
 
     def parse_log_file(self, filepath):
         LOG_LINE_REGEX = re.compile(
-            r'^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) '
-            r'(?P<level>\w+) '
-            r'(?P<logger>[\w_.-]+): '
-            r'(?P<message>.*)$'
+            r"^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) "
+            r"(?P<level>\w+) "
+            r"(?P<logger>[\w_.-]+): "
+            r"(?P<message>.*)$"
         )
         parsed_logs = []
 
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             for line_number, line in enumerate(f, 1):
                 line = line.strip()
                 if not line:
@@ -87,10 +87,10 @@ class MemoryLogHandler(logging.Handler):
 
                 groups = match.groupdict()
                 parsed_log = {
-                    'timestamp': groups['timestamp'],  # kept as string
-                    'level': groups['level'],
-                    'logger': groups['logger'],
-                    'message': groups['message'],
+                    "timestamp": groups["timestamp"],  # kept as string
+                    "level": groups["level"],
+                    "logger": groups["logger"],
+                    "message": groups["message"],
                 }
 
                 self.logs.append(parsed_log)

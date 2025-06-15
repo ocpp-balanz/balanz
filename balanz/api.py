@@ -14,6 +14,7 @@ import websockets.asyncio
 import websockets.asyncio.server
 from audit_logger import audit_logger
 from config import config
+from firmware import Firmware
 from memory_log_handler import MemoryLogHandler
 from model import Charger, Group, Session, Tag
 from ocpp.messages import MessageType
@@ -193,6 +194,81 @@ async def api_handler(websocket):
                     result = [MessageType.CallResult, message_id, {"drawing": drawing}]
                 elif not result and command == "GetUsers":
                     result = [MessageType.CallResult, message_id, [u.external() for u in User.user_list.values()]]
+                elif not result and command == "GetFirmware":
+                    result = [
+                        MessageType.CallResult,
+                        message_id,
+                        [u.external() for u in Firmware.firmware_list.values()],
+                    ]
+                elif not result and command == "CreateFirmware":
+                    firmware_id = payload.get("firmware_id", None)
+                    charge_point_vendor = payload.get("charge_point_vendor", None)
+                    charge_point_model = payload.get("charge_point_model", None)
+                    firmware_version = payload.get("firmware_version", None)
+                    meter_type = payload.get("meter_type", "")
+                    url = payload.get("url", None)
+                    upgrade_from_versions = payload.get("upgrade_from_versions", "")
+                    if (
+                        firmware_id is None
+                        or charge_point_vendor is None
+                        or charge_point_model is None
+                        or url is None
+                        or firmware_id in Firmware.firmware_list
+                    ):
+                        result = [MessageType.CallError, message_id, "IllegalArguments"]
+                    else:
+                        Firmware(
+                            firmware_id=firmware_id,
+                            charge_point_vendor=charge_point_vendor,
+                            charge_point_model=charge_point_model,
+                            firmware_version=firmware_version,
+                            meter_type=meter_type,
+                            url=url,
+                            upgrade_from_versions=upgrade_from_versions,
+                        )
+                        # Write update to file
+                        Firmware.write_csv(config["model"]["firmware_csv"])
+                        result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
+                elif not result and command == "ModifyFirmware":
+                    firmware_id = payload.get("firmware_id", None)
+                    charge_point_vendor = payload.get("charge_point_vendor", None)
+                    charge_point_model = payload.get("charge_point_model", None)
+                    firmware_version = payload.get("firmware_version", None)
+                    meter_type = payload.get("meter_type", "")
+                    url = payload.get("url", None)
+                    upgrade_from_versions = payload.get("upgrade_from_versions", "")
+                    if firmware_id is None or firmware_id not in Firmware.firmware_list:
+                        result = [MessageType.CallError, message_id, "IllegalArguments"]
+                    firmware = Firmware.firmware_list[firmware_id]
+                    if charge_point_vendor is not None:
+                        firmware.charge_point_vendor = charge_point_vendor
+                    if charge_point_model is not None:
+                        firmware.charge_point_model = charge_point_model
+                    if firmware_version is not None:
+                        firmware.version = firmware_version
+                    if meter_type is not None:
+                        firmware.meter_type = meter_type
+                    if url is not None:
+                        firmware.url = url
+                    if upgrade_from_versions is not None:
+                        firmware.upgrade_from_versions = upgrade_from_versions
+
+                    # Write update to file
+                    Firmware.write_csv(config["model"]["firmware_csv"])
+                    result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
+                elif not result and command == "DeleteFirmware":
+                    firmware_id = payload.get("firmware_id", None)
+                    if firmware_id is None or firmware_id not in Firmware.firmware_list:
+                        result = [MessageType.CallError, message_id, "IllegalArguments"]
+                    del Firmware.firmware_list[firmware_id]
+                    # Write update to file
+                    Firmware.write_csv(config["model"]["firmware_csv"])
+                    result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
+                elif not result and command == "ReloadFirmware":
+                    # Reload firmware list from csv file
+                    Firmware.firmware_list.clear()
+                    Firmware.read_csv(config["model"]["firmware_csv"])
+                    result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
                 elif not result and command == "UpdateUser":
                     user_id = payload.get("user_id", None)
                     user_type = payload.get("user_type", None)

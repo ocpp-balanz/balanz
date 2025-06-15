@@ -18,6 +18,7 @@ from audit_logger import audit_logger
 from charge_point_csms_v16 import ChargePoint_CSMS_v16
 from charge_point_lc_v16 import ChargePoint_LC_v16
 from config import config
+from firmware import Firmware
 from memory_log_handler import MemoryLogHandler
 from model import ChargeChange, Charger, Connector, Group, Session, Tag, Transaction
 from ocpp.v16.enums import ChargePointStatus, ChargingProfileStatus, ClearChargingProfileStatus, Reason
@@ -511,6 +512,7 @@ async def main():
     if config.has_option("history", "session_csv"):
         Session.register_csv_file(config["history"]["session_csv"])
     User.read_csv(config["api"]["users_csv"])
+    Firmware.read_csv(config["model"]["firmware_csv"])
 
     # Start server, either ws:// or wss://
     if cert_chain and cert_key:
