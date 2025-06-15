@@ -26,6 +26,7 @@ value set.
 import csv
 import logging
 import random
+import re
 import string
 import time
 from collections import defaultdict, deque
@@ -36,6 +37,7 @@ from math import ceil
 
 from audit_logger import audit_logger
 from config import config
+from firmware import Firmware
 from ocpp.v16.datatypes import IdTagInfo
 from ocpp.v16.enums import AuthorizationStatus, ChargePointStatus
 from util import (
@@ -626,6 +628,9 @@ class Charger:
         self.firmware_version: str = None
         self.meter_type: str = None
 
+        # Fields to come from firmware check.
+        self.fw_options: list = []
+
         # Technically there is a Connector 0 representing the charger as well. This will not be used.
         self.connectors: dict[Connector] = {}
         for connector_id in range(1, 1 + no_connectors):  # 1-based
@@ -668,6 +673,7 @@ class Charger:
             "charge_point_serial_number",
             "firmware_version",
             "meter_type",
+            "fw_options"
         ]
         result = {k: self.__dict__[k] for k in fields}
         result["connectors"] = {conn_id: self.connectors[conn_id].external() for conn_id in self.connectors.keys()}
@@ -810,6 +816,9 @@ class Charger:
             if hasattr(self, arg):
                 setattr(self, arg, kwargs[arg])
         logger.info(f"boot_notification from {self.charger_id} ({self.alias})")
+
+        # Use the received vendor, firmware, etc. info to update possible FW update options.
+        self.update_fw_options()
 
     def heartbeat(self, timestamp: float = None) -> None:
         """Register a Heartbeat for the charger. Updates the last_update field."""
@@ -1072,6 +1081,31 @@ class Charger:
             connector.transaction.charging_history.append(
                 ChargingHistory(timestamp=timestamp, offered=None, usage=usage_meter)
             )
+
+    @staticmethod
+    def update_all_charger_fw_options() -> None:
+        """Update charger fw options, i.e. the possible firmware for that charger"""
+        for charger in Charger.charger_list.values():
+            charger.update_fw_options()
+
+    def update_fw_options(self) -> None:
+        # First, let's set options to empty list.
+        self.fw_options = []
+        # Now we will check each available firmware for a match
+        # We will explore match using regular expressions
+        for firmware in Firmware.firmware_list.values():
+            firmware: Firmware
+            # Do we have the necessary fields on charger?
+            if not all([self.charge_point_vendor, self.charge_point_model, self.firmware_version]):
+                continue
+
+            if (
+                re.match(firmware.charge_point_vendor, self.charge_point_vendor)
+                and re.match(firmware.charge_point_model, self.charge_point_model)
+                and re.match(firmware.upgrade_from_versions, self.firmware_version)
+            ):
+                # If we have a match, add the firmware to the list of options for that charger.
+                self.fw_options.append({"firmware": firmware.firmware_id, "url": firmware.url})
 
 
 class Group:

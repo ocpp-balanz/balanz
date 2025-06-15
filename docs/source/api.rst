@@ -83,6 +83,18 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``DeleteUser``
      - ``user_id``
      - Delete user
+   * - ``CreateFirmware``
+     - ``firmware_id, charge_point_vendor, charge_point_model, firmware_version, meter_type, url, upgrade_from_versions``
+     - Create new firmware metadata
+   * - ``UpdateFirmware``
+     - ``firmware_id, charge_point_vendor, charge_point_model, firmware_version, meter_type, url, upgrade_from_versions``
+     - Update firmware metadata
+   * - ``DeleteFirmware``
+     - ``firmware_id``
+     - Delete firmware metadata
+   * - ``ReloadFirmware``
+     - (None)
+     - Reload Firmware metadata from CSV file
    * - ``GetGroups``
      - (None)
      - Returns full group structure

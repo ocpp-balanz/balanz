@@ -228,6 +228,7 @@ async def api_handler(websocket):
                         )
                         # Write update to file
                         Firmware.write_csv(config["model"]["firmware_csv"])
+                        Charger.update_all_charger_fw_options()
                         result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
                 elif not result and command == "ModifyFirmware":
                     firmware_id = payload.get("firmware_id", None)
@@ -255,6 +256,7 @@ async def api_handler(websocket):
 
                     # Write update to file
                     Firmware.write_csv(config["model"]["firmware_csv"])
+                    Charger.update_all_charger_fw_options()
                     result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
                 elif not result and command == "DeleteFirmware":
                     firmware_id = payload.get("firmware_id", None)
@@ -263,11 +265,13 @@ async def api_handler(websocket):
                     del Firmware.firmware_list[firmware_id]
                     # Write update to file
                     Firmware.write_csv(config["model"]["firmware_csv"])
+                    Charger.update_all_charger_fw_options()
                     result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
                 elif not result and command == "ReloadFirmware":
                     # Reload firmware list from csv file
                     Firmware.firmware_list.clear()
                     Firmware.read_csv(config["model"]["firmware_csv"])
+                    Charger.update_all_charger_fw_options()
                     result = [MessageType.CallResult, message_id, {"status": "Accepted"}]
                 elif not result and command == "UpdateUser":
                     user_id = payload.get("user_id", None)
