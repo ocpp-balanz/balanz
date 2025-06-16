@@ -127,6 +127,7 @@ class ChargePoint_CSMS_v16(ChargePoint_v16):
 
     @on(Action.firmware_status_notification)
     def on_firmware_status_notification(self, **kwargs):
+        self.charger.firmware_notification(**kwargs)
         return call_result.FirmwareStatusNotification()
 
     @on(Action.data_transfer)

@@ -820,6 +820,9 @@ class Charger:
         # Use the received vendor, firmware, etc. info to update possible FW update options.
         self.update_fw_options()
 
+    def firmware_notification(self, **kwargs) -> None:
+        logger.info(f"Firmware notification charger from {self.charger_id} ({self.alias}): {kwargs}")
+
     def heartbeat(self, timestamp: float = None) -> None:
         """Register a Heartbeat for the charger. Updates the last_update field."""
         if not timestamp:
