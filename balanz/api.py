@@ -909,6 +909,7 @@ async def api_handler(websocket):
                         ]
                     else:
                         # Note: No return value from this call!
+                        logger.info(f"Initiated firmware update for {charger_id} ({charger.alias}). URL: {location}")
                         await charger.ocpp_ref.update_firmware(location=location)
                         result = [
                             MessageType.CallResult,

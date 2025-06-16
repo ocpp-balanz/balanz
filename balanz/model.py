@@ -1108,7 +1108,7 @@ class Charger:
                 and re.match(firmware.upgrade_from_versions, self.firmware_version)
             ):
                 # If we have a match, add the firmware to the list of options for that charger.
-                self.fw_options.append({"firmware": firmware.firmware_id, "url": firmware.url})
+                self.fw_options.append({"firmware_id": firmware.firmware_id, "url": firmware.url})
 
 
 class Group:
