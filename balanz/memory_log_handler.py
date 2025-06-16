@@ -75,22 +75,28 @@ class MemoryLogHandler(logging.Handler):
         )
         parsed_logs = []
 
-        with open(filepath, "r", encoding="utf-8") as f:
-            for line_number, line in enumerate(f, 1):
-                line = line.strip()
-                if not line:
-                    continue
-                match = LOG_LINE_REGEX.match(line)
-                if not match:
-                    print(f"Warning: Line {line_number} didn't match expected format.")
-                    continue
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                for line_number, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    match = LOG_LINE_REGEX.match(line)
+                    if not match:
+                        print(f"Warning: Line {line_number} didn't match expected format.")
+                        continue
 
-                groups = match.groupdict()
-                parsed_log = {
-                    "timestamp": groups["timestamp"],  # kept as string
-                    "level": groups["level"],
-                    "logger": groups["logger"],
-                    "message": groups["message"],
-                }
+                    groups = match.groupdict()
+                    parsed_log = {
+                        "timestamp": groups["timestamp"],  # kept as string
+                        "level": groups["level"],
+                        "logger": groups["logger"],
+                        "message": groups["message"],
+                    }
 
-                self.logs.append(parsed_log)
+                    self.logs.append(parsed_log)
+        except FileNotFoundError:
+            # Create empty log file if it does not exist
+            with open(filepath, "w", encoding="utf-8") as f:
+                pass
+            
