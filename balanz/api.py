@@ -587,7 +587,7 @@ async def api_handler(websocket):
                             {"status": "NoSuchTag"},
                         ]
                     else:
-                        audit_logger.info(f"[TAG-DELETE] Deleted tag {id_tag} ({Tag.tag_list[id_tag].username})")
+                        audit_logger.info(f"[TAG-DELETE] Deleted tag {id_tag} ({Tag.tag_list[id_tag].user_name})")
                         del Tag.tag_list[id_tag]
                         Tag.write_csv(config["model"]["tags_csv"])
                         result = [
