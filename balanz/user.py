@@ -93,9 +93,9 @@ class User:
         auth_sha: str = gen_sha_256(auth)
         for user in User.user_list.values():
             if user.auth_sha == auth_sha:
-                audit_logger.info(f"Successful auth check. User {user.user_id}, type {user.user_type}")
+                logger.info(f"Successful auth check. User {user.user_id}, type {user.user_type}")
                 return user.user_type
-        audit_logger.info(f"Failed auth check. auth starts {auth[:5]}...")
+        logger.info(f"Failed auth check. auth starts {auth[:5]}...")
         return None
 
     @staticmethod
