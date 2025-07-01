@@ -61,6 +61,13 @@ class ChargePoint_CSMS_v16(ChargePoint_v16):
 
     @on(Action.heartbeat)
     def on_heartbeat(self, **kwargs):
+        # Check possible connectivy status issue where we have lost the ocpp_ref on the charger
+        if self.charger.ocpp_ref is None:
+            logger.warning(
+                f"heartbeat from {self.charger.charger_id} ({self.charger.alias}) but no ocpp_ref. Charger connection is apparently NOT lost. Restoring ocpp_ref."
+            )
+            self.charger.ocpp_ref = self
+
         self.charger.heartbeat()
         return call_result.Heartbeat(current_time=datetime.now(timezone.utc).isoformat())
 
