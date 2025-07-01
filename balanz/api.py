@@ -240,13 +240,13 @@ async def api_handler(websocket):
                     upgrade_from_versions = payload.get("upgrade_from_versions", "")
                     if firmware_id is None or firmware_id not in Firmware.firmware_list:
                         result = [MessageType.CallError, message_id, "IllegalArguments"]
-                    firmware = Firmware.firmware_list[firmware_id]
+                    firmware: Firmware = Firmware.firmware_list[firmware_id]
                     if charge_point_vendor is not None:
                         firmware.charge_point_vendor = charge_point_vendor
                     if charge_point_model is not None:
                         firmware.charge_point_model = charge_point_model
                     if firmware_version is not None:
-                        firmware.version = firmware_version
+                        firmware.firmware_version = firmware_version
                     if meter_type is not None:
                         firmware.meter_type = meter_type
                     if url is not None:
@@ -587,7 +587,7 @@ async def api_handler(websocket):
                             {"status": "NoSuchTag"},
                         ]
                     else:
-                        audit_logger.info(f"[TAG-DELETE] Deleted tag {id_tag} ({Tag.tag_list[id_tag].username})")
+                        audit_logger.info(f"[TAG-DELETE] Deleted tag {id_tag} ({Tag.tag_list[id_tag].user_name})")
                         del Tag.tag_list[id_tag]
                         Tag.write_csv(config["model"]["tags_csv"])
                         result = [
