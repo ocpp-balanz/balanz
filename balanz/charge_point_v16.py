@@ -259,22 +259,42 @@ class ChargePoint_v16(cp):
         """
         return await self.clear_charging_profile_req(id=2, connector_id=connector_id)
 
-    async def set_tx_profile(self, connector_id: int, transaction_id: int, limit: float):
+    async def set_tx_profile(self, connector_id: int, transaction_id: int, limit: float, start_at: float = None):
         """Set/overwrite a TxProfile for transaction.
 
         Will only contain a single schedule (now => forever) with the limit being set to the number of Amps offered.
 
         Fields like charging_profile_id, stack_level, etc. are all fixed.
+
+        If "start_at" (epoch seconds) is given, the schedule instead holds the charger at 0 A until that moment
+        and applies "limit" from then on, so the charger starts charging by itself at the requested time with no
+        further involvement from balanz. This is delayed charging, and is only safe in an unmanaged group: in an
+        allocation group the next balanz run would overwrite this very profile within seconds. The schedule is
+        absolute, so it carries an explicit start, and it has no end - the final period runs for the rest of the
+        transaction. Being a TxProfile, it is discarded by the charger when the transaction stops.
         """
+        if start_at is None:
+            schedule = {
+                "chargingRateUnit": ChargingRateUnitType.amps,
+                "chargingSchedulePeriod": [{"startPeriod": 0, "limit": limit}],
+            }
+        else:
+            now = time.time()
+            schedule = {
+                "chargingRateUnit": ChargingRateUnitType.amps,
+                "startSchedule": datetime.fromtimestamp(now, UTC).isoformat().replace("+00:00", "Z"),
+                "chargingSchedulePeriod": [
+                    {"startPeriod": 0, "limit": 0},
+                    {"startPeriod": max(0, int(start_at - now)), "limit": limit},
+                ],
+            }
+
         cs_charging_profile = ChargingProfile(
             charging_profile_id=3,
             stack_level=3,
             charging_profile_purpose=ChargingProfilePurposeType.tx_profile,
             charging_profile_kind=ChargingProfileKindType.absolute,
-            charging_schedule={
-                "chargingRateUnit": ChargingRateUnitType.amps,
-                "chargingSchedulePeriod": [{"startPeriod": 0, "limit": limit}],
-            },
+            charging_schedule=schedule,
             transaction_id=transaction_id,
         )
 

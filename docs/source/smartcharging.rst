@@ -61,6 +61,8 @@ such offer will automatically be invalidated once a transaction stops. The first
 will restore *blocking profile* in order to be ready for the next charging session.
 
 
+.. _delayed-charging:
+
 Delayed Charging
 ----------------
 
@@ -72,8 +74,45 @@ When the time of charging is reached, charging will start provided that there is
 available, charging will not start. What happens from here depends on the brand of EV. In some cases, charging will start when an offer is 
 made (balanz could e.g. be setup to made offers once every hour), while other EVs will simply never start charging in that session!
 
-balanz includes some measures to deal with delayed charging, but in general it is recommended to turn off delayed charging and leave all
-Smart Charging decisions to balanz.
+balanz includes some measures to deal with delayed charging, but in general it is recommended to turn off delayed charging **in the EV** and
+leave all Smart Charging decisions to balanz. The remainder of this section describes a different thing: delaying a charging session from
+:term:`balanz` itself, which is supported for unmanaged groups.
+
+
+Delaying a session from balanz
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For chargers in a group with no ``max_allocation`` - an *unmanaged* group - a running charging session can be told to start charging at a
+later time, using the ``SetDelayedCharging`` API call. A typical use is a car plugged in during the evening that should only draw power once
+the cheap night tariff begins.
+
+The call sets a ``TxProfile`` whose schedule holds the charger at 0 A until the requested time and then allows the requested limit:
+
+.. code-block:: text
+    :caption: The schedule set for a session to begin at 00:45
+
+    startSchedule:  <now>
+    period 0:       0 A        the charger does not charge
+    period 13500:   16 A       from 00:45, for the rest of the session
+
+Once the profile is set, the charger acts on it by itself. Neither :term:`balanz` nor the client is involved when the time arrives. Because it
+is a ``TxProfile`` it is bound to the current transaction, and the charger discards it when that transaction ends - so unplugging the car
+cancels the delay.
+
+While waiting, the charger will typically report ``SuspendedEVSE``, the same state a blocked charger reports. A client should present this as
+*scheduled* rather than as a fault.
+
+To charge immediately after all, set an ordinary limit with ``SetTxProfile``. It uses the same charging profile id and stack level, so it
+replaces the delayed schedule.
+
+.. note::
+  This is deliberately restricted to unmanaged groups. In an allocation group :term:`balanz` owns the ``TxProfile`` and rewrites it on its next
+  run, which would silently discard the schedule within seconds. ``SetDelayedCharging`` therefore refuses such a charger with
+  ``GroupIsManaged`` rather than setting something that will not hold.
+
+.. note::
+  :term:`balanz` does not remember that a session was delayed - the schedule lives on the charger. A client that offers this feature should
+  track it itself if it wants to show the user that a delay is pending.
 
 
 Charging priority

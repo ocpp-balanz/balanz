@@ -7,6 +7,7 @@ Refer to the documentation for a list of supported calls.
 
 import json
 import logging
+import time
 
 import drawmodel
 import websockets
@@ -29,7 +30,7 @@ from ocpp.v16.enums import (
     TriggerMessageStatus,
 )
 from user import User, UserType
-from util import gen_sha_256, time_str
+from util import gen_sha_256, parse_time, time_str
 
 logger = logging.getLogger("api")
 
@@ -37,9 +38,10 @@ logger = logging.getLogger("api")
 API_ALLOW = {}
 API_ALLOW[UserType.status] = ["GetGroups", "GetChargers"]
 API_ALLOW[UserType.analysis] = API_ALLOW[UserType.status] + ["GetTags", "DrawAll", "GetSessions"]
-API_ALLOW[UserType.session_priority] = API_ALLOW[UserType.status] + ["SetChargePriority"]
+API_ALLOW[UserType.session_priority] = API_ALLOW[UserType.status] + ["SetChargePriority", "SetDelayedCharging"]
 API_ALLOW[UserType.tag] = API_ALLOW[UserType.analysis] + [
     "SetChargePriority",
+    "SetDelayedCharging",
     "WriteTags",
     "UpdateTag",
     "CreateTag",
@@ -106,6 +108,7 @@ async def api_handler(websocket):
                     "ChangeConfiguration",
                     "TriggerMessage",
                     "SetChargePriority",
+                    "SetDelayedCharging",
                     "UpdateFirmware",
                 ]:
                     charger_id = payload.get("charger_id", None)
@@ -693,6 +696,84 @@ async def api_handler(websocket):
                             message_id,
                             {"status": "Accepted"},
                         ]
+                elif not result and command == "SetDelayedCharging":
+                    connector_id = payload.get("connector_id", 1)
+                    limit = payload.get("limit", None)
+                    start_time = payload.get("start_time", None)
+                    group = Group.group_list.get(charger.group_id, None)
+
+                    if limit is None or start_time is None:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "IllegalArguments"},
+                        ]
+                    elif group is None or group.is_allocation_group():
+                        # Smart Charging owns the TxProfile in an allocation group and would
+                        # overwrite this schedule on its next run, so refuse rather than set
+                        # something that silently stops working.
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "GroupIsManaged"},
+                        ]
+                    elif connector_id not in charger.connectors:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "NoSuchConnector"},
+                        ]
+                    elif charger.connectors[connector_id].transaction is None:
+                        result = [
+                            MessageType.CallError,
+                            message_id,
+                            {"status": "ConnectorNotInTransaction"},
+                        ]
+                    else:
+                        try:
+                            # Local time, as the app presents it to the user. A naive timestamp
+                            # is read in the server's own timezone, matching time_str().
+                            start_at = parse_time(start_time)
+                        except ValueError:
+                            start_at = None
+
+                        if start_at is None:
+                            result = [
+                                MessageType.CallError,
+                                message_id,
+                                {"status": "IllegalArguments"},
+                            ]
+                        elif start_at <= time.time():
+                            result = [
+                                MessageType.CallError,
+                                message_id,
+                                {"status": "StartTimeInPast"},
+                            ]
+                        else:
+                            transaction = charger.connectors[connector_id].transaction
+                            c_result = await charger.ocpp_ref.set_tx_profile(
+                                connector_id=connector_id,
+                                transaction_id=transaction.transaction_id,
+                                limit=limit,
+                                start_at=start_at,
+                            )
+                            if c_result.status != ChargingProfileStatus.accepted:
+                                result = [
+                                    MessageType.CallError,
+                                    message_id,
+                                    {"status": c_result.status},
+                                ]
+                            else:
+                                audit_logger.info(
+                                    f"[DELAYED-CHARGING] {charger.charger_id}/{connector_id} "
+                                    f"({charger.alias}) to start charging at {time_str(start_at)} "
+                                    f"with a limit of {limit}A"
+                                )
+                                result = [
+                                    MessageType.CallResult,
+                                    message_id,
+                                    {"status": "Accepted"},
+                                ]
                 elif not result and command == "ClearDefaultProfiles":
                     c_result = await charger.ocpp_ref.clear_all_default_profiles()
                     if c_result.status != ClearChargingProfileStatus.accepted:

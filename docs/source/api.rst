@@ -65,6 +65,12 @@ are not detailed, but should be quite intiutive. Try the commands - maybe using 
    * - ``SetChargePriority``
      - ``charger_id, alias, connector_id, priority``
      - Update the priority of a session on a connector 
+   * - ``SetDelayedCharging``
+     - ``charger_id, alias, connector_id`` (default 1), ``limit``, ``start_time``
+     - Hold the current charging session at 0 A until ``start_time``, then allow ``limit`` Amps.
+       ``start_time`` is local time, as ``YYYY-MM-DD HH:MM:SS``. **Only for chargers in unmanaged
+       groups**; see :ref:`delayed-charging`. Errors: ``GroupIsManaged``, ``StartTimeInPast``,
+       ``ConnectorNotInTransaction``, ``NoSuchConnector``, ``IllegalArguments``
    * - ``UpdateFirmware``
      - ``location``
      - Update the charger firmware 
